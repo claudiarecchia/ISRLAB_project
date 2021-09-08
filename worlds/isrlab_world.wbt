@@ -1,0 +1,90 @@
+#VRML_SIM R2021b utf8
+WorldInfo {
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  orientation 0.9993539037441458 0.0315994143226324 0.017124604690421836 5.004336194914671
+  position -2.1796190025978794 9.38418481843677 1.878029176107619
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  translation -0.944161 -0.3 -1.24075
+  floorSize 5 5
+  floorTileSize 1 1
+  floorAppearance Parquetry {
+    type "light strip"
+  }
+  wallThickness 0.1
+  wallHeight 0.5
+}
+Solid {
+  translation -2.39727 -0.206278 -2.20494
+  rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
+  scale 2 2 2
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 1 0
+        }
+      }
+      geometry Box {
+        size 0.08 0.08 0.08
+      }
+    }
+  ]
+  name "yellow box"
+  boundingObject Box {
+    size 0.08 0.08 0.08
+  }
+  physics Physics {
+    mass 0.1
+  }
+  recognitionColors [
+    1 1 0
+  ]
+}
+Solid {
+  translation -0.0911977 -0.2 -2.64766
+  scale 2 2 2
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 0 1 0
+        }
+      }
+      geometry Box {
+        size 0.08 0.08 0.08
+      }
+    }
+  ]
+  name "green box"
+  boundingObject Box {
+    size 0.08 0.08 0.08
+  }
+  physics Physics {
+    mass 0.1
+  }
+  recognitionColors [
+    0 1 0
+  ]
+}
+Pioneer3dx {
+  translation -2.09467 -0.1925 -1.15314
+  controller "<extern>"
+  extensionSlot [
+    GPS {
+    }
+    Compass {
+    }
+    Camera {
+      recognition Recognition {
+        occlusion FALSE
+      }
+    }
+  ]
+}
