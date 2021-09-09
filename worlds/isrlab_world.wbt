@@ -48,7 +48,7 @@ Solid {
   ]
 }
 Solid {
-  translation -0.0911977 -0.2 -2.64766
+  translation 1.04589 -0.2 0.833601
   scale 2 2 2
   children [
     Shape {
