@@ -24,8 +24,11 @@ straight = False
 box_placed = False
 total_boxes = 2
 check_for_box = False
+before_action_yaw = None
+saved_yaw = False
 
 ACTION = ""
+NEXT_ACTION = ""
 
 # Robot instance.
 robot = Robot()
@@ -94,17 +97,17 @@ rightMotor.setVelocity(0.6 * MAX_SPEED)
 
 
 def check_wall_reached():
-    global count, wall_reached_gps, wall_reached_compass, wall_reached, straight, before_action_gps
+    global count, wall_reached_gps, wall_reached_compass, wall_reached, straight, before_action_gps, ACTION
     # più di 1 sensore misura un valore elevato => parete
     # FRONT WALL REACHED => ho la parete davanti, allora devo andare indietro
     # if sum(s.getValue() > 950 for s in sensors) > 1:
-    if d3.getValue() > 950 and d4.getValue() > 950:
+    if d3.getValue() > 950 and d4.getValue() > 950 and ACTION != "go left" and ACTION != "go right":
         print("WALL REACHED")
         wall_reached_gps = gps_sensor.getValues()
         wall_reached_compass = compass.getValues()
         print("GO BACK")
-        leftMotor.setVelocity(-0.6 * MAX_SPEED)
-        rightMotor.setVelocity(-0.6 * MAX_SPEED)
+        ACTION = "go back"
+        # go_back()
         wall_reached = True
         # Se ci sono più sensori che misurano un valore elevato sono in un angolo
         # (posso aver portato un cubo in posizione)
@@ -119,41 +122,36 @@ def check_wall_reached():
 
 
 def turn_after_wall_reached():
-    global stopped, wall_reached_gps, wall_reached, before_turning_left_compass, turn_left, before_action_gps, straight
-    # print(abs(wall_reached_gps[0] - gps_sensor.getValues()[0]))
-    # print(abs(wall_reached_gps[1] - gps_sensor.getValues()[1]))
-    # print(abs(wall_reached_gps[2] - gps_sensor.getValues()[2]))
+    global wall_reached_gps, ACTION, NEXT_ACTION, before_action_yaw, saved_yaw
+
     if abs(wall_reached_gps[0] - gps_sensor.getValues()[0]) > 0.3 or abs(
             wall_reached_gps[1] - gps_sensor.getValues()[1]) > 0.3 or abs(
             wall_reached_gps[2] - gps_sensor.getValues()[2]) > 0.3:
-        print("STOP")
-        leftMotor.setVelocity(0)
-        rightMotor.setVelocity(0)
-        stopped = True
-        straight = False
-    if stopped:
-        # quando il robot è fermo, gli indico di girare a destra
-        print("TURN RIGHT")
-        leftMotor.setVelocity(0.2 * MAX_SPEED)
-        rightMotor.setVelocity(0)
-        # print(abs(round(wall_reached_compass[0]) - round(compass.getValues()[2])))
-        # print(abs((wall_reached_compass[0]) - (compass.getValues()[2])))
-        # if round(abs(wall_reached_compass[0]) - (compass.getValues()[2]), 3) == 1.999:
 
-        # gira a destra finchè non raggiunge la posizione esatta verso destra (est)
-        if round((inertial_unit.getRollPitchYaw())[1] >= 1.5):  # pi/2 = est
-            print("saved")
-            # before_turning_left_compass = compass.getValues()
-            before_action_gps = gps_sensor.getValues()
-            # quando raggiunge est, deve rigirare a sinistra
-            turn_left = True
-            wall_reached = False
-            stopped = False
-            go_straight()
+        # di default, vado a destra ma se sono in una situazione limite allora applico un'altra regola
+        if d7.getValue() < 900:
+            ACTION = "go right"
+            NEXT_ACTION = "go straight"
+            # salvo le informazioni per poter girare di 90 gradi
+            # evito la sovrascrittura
+            if not saved_yaw:
+                before_action_yaw = (inertial_unit.getRollPitchYaw())[1]
+                print("SALVATO")
+                saved_yaw = True
+
+        else:
+            # a destra ho un muro, quindi giro a sinistra (parte opposta)
+            ACTION = "go left"
+            NEXT_ACTION = "go straight"
+            # evito la sovrascrittura
+            if not saved_yaw:
+                before_action_yaw = (inertial_unit.getRollPitchYaw())[1]
+                print("SALVATO")
+                saved_yaw = True
 
 
 def do_turn_left(before_action_gps):
-    global turn_left, straight
+    global turn_left, straight, ACTION
     print("valori")
     print(abs(before_action_gps[0] - gps_sensor.getValues()[0]))
     print(abs(before_action_gps[1] - gps_sensor.getValues()[1]))
@@ -162,7 +160,8 @@ def do_turn_left(before_action_gps):
             abs(before_action_gps[1] - gps_sensor.getValues()[1]) > 0.5 or \
             abs(before_action_gps[2] - gps_sensor.getValues()[2]) > 0.5:
         print("TURN LEFT")
-        go_left()
+        ACTION = "go left"
+        # go_left()
         # print(abs(round(before_turning_left_compass[0]) - round(compass.getValues()[2])))
         # print(abs((before_turning_left_compass[0]) - (compass.getValues()[2])))
         # if round(abs(before_turning_left_compass[0] - (compass.getValues()[2])), 2) == 0.97 and d7.getValue() > 900:
@@ -170,13 +169,15 @@ def do_turn_left(before_action_gps):
         # TODO considerare la differenza con un valore salvato precedentemente
         if (inertial_unit.getRollPitchYaw())[1] <= -1.55:  # -pi/2 = ovest
             print("vai avanti")
-            turn_left = False
-            straight = True
+            ACTION = "go straight"
+            # turn_left = False
+            # straight = True
 
 
 def go_left():
+    print("sinistra")
     leftMotor.setVelocity(0)
-    rightMotor.setVelocity(0.2 * MAX_SPEED)
+    rightMotor.setVelocity(0.4 * MAX_SPEED)
 
 
 def go_straight():
@@ -185,23 +186,36 @@ def go_straight():
     rightMotor.setVelocity(0.6 * MAX_SPEED)
 
 
+def go_back():
+    print("back")
+    leftMotor.setVelocity(-0.6 * MAX_SPEED)
+    rightMotor.setVelocity(-0.6 * MAX_SPEED)
+
+
+def go_right():
+    print("destra")
+    leftMotor.setVelocity(0.4 * MAX_SPEED)
+    rightMotor.setVelocity(0)
+
+
 def check_for_other_box():
-    global before_action_gps, box_placed
+    global before_action_gps, box_placed, ACTION
     box_placed = False
     print("check for box")
     # se il robot ha percorso abbastanza spazio
     if abs(before_action_gps[0] - gps_sensor.getValues()[0]) > 0.5 or \
             abs(before_action_gps[1] - gps_sensor.getValues()[1]) > 0.5 or \
             abs(before_action_gps[2] - gps_sensor.getValues()[2]) > 0.5:
-        if d7.getValue() > 900:
-            # sensore 7 alto => parete a destra => giro a sinistra
-            print("sinistra")
-            go_left()
+        ACTION = "go left"
+
+        # if d7.getValue() > 900:
+        #     # sensore 7 alto => parete a destra => giro a sinistra
+        #     print("sinistra")
+        #     go_left()
     else:
         # ho appena posizionato un box, quindi devo tornare indietro
-        print("indietro")
-        leftMotor.setVelocity(-0.6 * MAX_SPEED)
-        rightMotor.setVelocity(-0.6 * MAX_SPEED)
+        # print("indietro")
+        ACTION = "go back"
 
         # TODO aggiungere sensore speculare a d7
 
@@ -222,9 +236,19 @@ while robot.step(TIME_STEP) != -1:
         prev_sensors.append(sensors[i].getValue())
 
     if target_object is None and camera.getRecognitionNumberOfObjects() >= 1:
+        # verifico che il target obj non sia già presente nella lista degli oggetti correttamente posizionati
+        print("boxes ids: ")
+        for el in boxes_ids:
+            print(el)
+        for el in camera.getRecognitionObjects():
+            if el.get_id() not in boxes_ids:
+                print("id: ", el.get_id())
+                target_object = el
+                target_obj_initial_position = el.get_position()
+
         # prendo il primo della lista
-        target_object = camera.getRecognitionObjects()[0]
-        target_obj_initial_position = camera.getRecognitionObjects()[0].get_position()
+        # target_object = camera.getRecognitionObjects()[0]
+        # target_obj_initial_position = el.get_position()
 
     # print("target obj:", target_object)
     print("compass:", compass.getValues())
@@ -251,26 +275,64 @@ while robot.step(TIME_STEP) != -1:
             leftMotor.setVelocity(0.6 * MAX_SPEED)
             rightMotor.setVelocity(0)
 
-    check_wall_reached()
-    if wall_reached: turn_after_wall_reached()
-    if turn_left: do_turn_left(before_action_gps)
-    if straight: go_straight()
+    if NEXT_ACTION == "go straight" and ACTION == "go right":
+        print("qui")
+        # gira a destra finchè non raggiunge la posizione esatta verso destra (est)
+        # if round((inertial_unit.getRollPitchYaw())[1] >= 1.5):  # pi/2 = est
+        print("yaw:", abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1]))
+        print("yaw:", abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1]) >= 1.2 )
+        if abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1]) >= 1.5:
+            before_action_gps = gps_sensor.getValues()
+            # quando raggiunge est, deve rigirare a sinistra
+            wall_reached = False
+            saved_yaw = False
+            ACTION = "go straight"
+            NEXT_ACTION = "go left"
+
+    if NEXT_ACTION == "go left" and ACTION == "go straight":
+        if abs(before_action_gps[0] - gps_sensor.getValues()[0]) > 0.5 or \
+                abs(before_action_gps[1] - gps_sensor.getValues()[1]) > 0.5 or \
+                abs(before_action_gps[2] - gps_sensor.getValues()[2]) > 0.5:
+            print("TURN LEFT")
+            ACTION = "go left"
+            NEXT_ACTION = "go straight"
+
+    if NEXT_ACTION == "go straight" and ACTION == "go left":
+        # if (inertial_unit.getRollPitchYaw())[1] <= -1.55:  # -pi/2 = ovest
+        print("yaw:", abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1]))
+        # print("yaw:", abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1]) >= 1.2 )
+        if abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1] >= 1.5):
+            saved_yaw = False
+            print("vai avanti")
+            ACTION = "go straight"
+
+    if ACTION == "go back": go_back()
+    if ACTION == "go left": go_left()
+    if ACTION == "go straight": go_straight()
+    if ACTION == "go right": go_right()
+
+
+    # if turn_left: do_turn_left(before_action_gps)
+    # if straight: go_straight()
     if camera.getRecognitionNumberOfObjects() == 1 and wall_reached and not check_for_box:
         objects = camera.getRecognitionObjects()
         obj = objects[0]
         if round(obj.get_position()[0], ) == 0 and \
                 round(obj.get_position()[1], 0) == 0 and \
                 round(obj.get_position()[2], 0) == 0 and \
-                round(gps_sensor.getValues()[0], 1) == -3.1 and round(gps_sensor.getValues()[1], 1) == -0.2 and \
-                -3.5 <= round(gps_sensor.getValues()[2], 1) <= -3.4:
+                -3.1 <= round(gps_sensor.getValues()[0], 1) <= -2.9 and round(gps_sensor.getValues()[1], 1) == -0.2 and \
+                -3.5 <= round(gps_sensor.getValues()[2], 1) <= -3.3:
             print("controlli superati")
-            straight = False
             box_placed = True
             boxes_ids.append(obj.get_id())
             if len(boxes_ids) < total_boxes:
                 check_for_box = True
+                target_object = None
                 before_action_gps = gps_sensor.getValues()
     if check_for_box: check_for_other_box()
+
+    check_wall_reached()
+    if wall_reached: turn_after_wall_reached()
 
     # print("target obj pos on image", target_object.get_position_on_image())
     print("gps sensor", gps_sensor.getValues())
