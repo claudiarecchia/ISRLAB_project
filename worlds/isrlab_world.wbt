@@ -74,9 +74,13 @@ Solid {
   ]
 }
 Pioneer3dx {
-  translation -2.09467 -0.1925 -1.15314
+  translation -2.3714 -0.1925 -1.15556
   controller "<extern>"
   extensionSlot [
+    InertialUnit {
+      xAxis FALSE
+      zAxis FALSE
+    }
     GPS {
     }
     Compass {
