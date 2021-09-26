@@ -6,8 +6,7 @@ minimizedPerspectives: 000000ff00000000fd00000003000000000000000000000000fc01000
 maximizedDockId: -1
 centralWidgetVisible: 1
 orthographicViewHeight: 1
-textFiles: 3 "../../../Applications/Webots.app/projects/default/controllers/braitenberg/braitenberg.c" "../nao_project/pioneer_controller.py" "../nao_project/controllers/my_nao_controller/my_nao_controller.py" "controllers/my_pioneer_controller/my_pioneer_controller.py" "../../../Applications/Webots.app/projects/robots/adept/pioneer3/controllers/pioneer3dx_collision_avoidance/pioneer3dx_collision_avoidance.c" "../../../Applications/Webots.app/projects/robots/irobot/create/controllers/create_avoid_obstacles/create_avoid_obstacles.c"
+textFiles: 5 "../../../Applications/Webots.app/projects/default/controllers/braitenberg/braitenberg.c" "../nao_project/pioneer_controller.py" "../nao_project/controllers/my_nao_controller/my_nao_controller.py" "../../../Applications/Webots.app/projects/robots/adept/pioneer3/controllers/pioneer3dx_collision_avoidance/pioneer3dx_collision_avoidance.c" "../../../Applications/Webots.app/projects/robots/irobot/create/controllers/create_avoid_obstacles/create_avoid_obstacles.c" "controllers/my_pioneer_controller/my_pioneer_controller.py"
 globalOptionalRendering: DistanceSensorRays
 consoles: Console:All:All
-renderingDevicePerspectives: Pioneer 2:camera;1;1;0;0
 renderingDevicePerspectives: Pioneer 3-DX:camera;1;1;0;0

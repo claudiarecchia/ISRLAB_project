@@ -3,8 +3,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.9993539037441458 0.0315994143226324 0.017124604690421836 5.004336194914671
-  position -2.1796190025978794 9.38418481843677 1.878029176107619
+  orientation 0.9998930481080043 0.014613620805959975 0.0005783011532430862 5.294957151722083
+  position -1.227746000778092 6.935150863154892 4.010187604636869
 }
 TexturedBackground {
 }
@@ -80,6 +80,9 @@ Pioneer3dx {
     InertialUnit {
       xAxis FALSE
       zAxis FALSE
+    }
+    DEF GRIPPER_BASE Pioneer3Gripper {
+      translation 0 0.026 -0.135
     }
     GPS {
     }
