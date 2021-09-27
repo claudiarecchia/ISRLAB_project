@@ -9,7 +9,6 @@
 """
 
 from controllers.my_pioneer_controller.RobotBody import Body
-import time
 
 MAX_SPEED = 6.28
 TIME_STEP = 64
@@ -21,7 +20,6 @@ high_sensors = []
 wall_reached = False
 stopped = False
 target_object = None
-boxes_ids = []
 prev_sensors = []
 target_obj_initial_position = None
 left = False
@@ -37,16 +35,16 @@ before_action_yaw = None
 saved_yaw = False
 turned = False
 
-
 ACTION = ""
 NEXT_ACTION = ""
+
+yellow_corner = [-2.9, -0.2, -3.3]
 
 
 class Brain:
 
     def __init__(self):
         self.robot = Body()
-        # self.robot = body
         self.target_object = None
         self.ACTION = ""
         self.NEXT_ACTION = ""
@@ -54,6 +52,11 @@ class Brain:
         self.wall_reached = False
         self.check_for_box = False
         self.grabbed_box = False
+        self.box_placed = False
+        self.boxes_ids = []
+        self.total_boxes = 3
+        self.before_action_gps = []
+        self.turned = False
 
     def get_robot(self):
         return self.robot.get_robot()
@@ -70,7 +73,7 @@ class Brain:
             wall_reached_compass = self.robot.get_compass_values()
             print("GO BACK")
             ACTION = "go back"
-            # go_back()
+
             self.wall_reached = True
             # Se ci sono più sensori che misurano un valore elevato sono in un angolo
             # (posso aver portato un cubo in posizione)
@@ -82,12 +85,6 @@ class Brain:
             return self.wall_reached
         else:
             return False
-
-    # def wall_1(placed_box):
-    #     if (-3.1 <= round(gps_sensor.getValues()[0], 1) <= -2.9 and round(gps_sensor.getValues()[1], 1) == -0.2 and
-    #      -3.5 <= round(gps_sensor.getValues()[2], 1) <= -3.3):
-    #         wall_1 = True
-    #         boxes_wall_1.append(placed_box.get_id())
 
     def turn_after_wall_reached(self):
         global wall_reached_gps, before_action_yaw, saved_yaw
@@ -217,11 +214,11 @@ class Brain:
         if self.target_object is None and self.robot.get_camera_number_objects() >= 1:
             # verifico che il target obj non sia già presente nella lista degli oggetti correttamente posizionati
             print("boxes ids: ")
-            for element in boxes_ids:
+            for element in self.boxes_ids:
                 print("element in list:", element)
             for el in self.robot.get_camera_objects():
                 print(el.get_id(), " ")
-                if el.get_id() not in boxes_ids:
+                if el.get_id() not in self.boxes_ids:
                     print("id: ", el.get_id())
                     self.target_object = el
                     target_obj_initial_position = el.get_position()
@@ -256,31 +253,59 @@ class Brain:
                         self.robot.go_right()
 
                     # se mi avvicino a un box rallento
-                    elif not self.grabbed_box and round(self.robot.get_camera_objects()[0].get_position()[0], 2) <= -0.01 and \
-                         round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
-                         round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.3:
+                    elif not self.grabbed_box and not self.check_for_box and \
+                            round(self.robot.get_camera_objects()[0].get_position()[0], 2) <= -0.01 and \
+                            round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
+                            round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.3:
                         self.robot.move_fingers(0.03)
                         self.ACTION = "slow down"
 
                     # se davanti ho un box e lo afferro
-                    elif round(self.robot.get_camera_objects()[0].get_position()[0], 1) >= -0.0 and \
+                    elif self.PREVIOUS_ACTION != "stop" and round(self.robot.get_camera_objects()[0].get_position()[0], 1) >= -0.0 and \
                             round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
                             round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.27:
                         self.ACTION = "stop"
                         self.PREVIOUS_ACTION = "stop"
                         self.grabbed_box = True
-
                         print("Box AFFERRATO")
-                        # time.sleep(0.2)
                         self.robot.lift(0.0)
-                        # self.ACTION = "lift box"
+
+                    elif self.grabbed_box:
+                        if element.get_colors() == [1.0, 1.0, 0.0]:  # giallo
+                            print("set position")
+                            if not self.wall_reached:
+                                # vado avanti finchè posso
+                                # quando mi accorgo che mi sto allontanando dal target modifico la direzione
+                                if round(abs(self.robot.get_gps_values()[2] - yellow_corner[2]), 2) > 0.1:
+                                    print("dritto")
+                                    self.ACTION = "go straight"
+                                elif round(abs(self.robot.get_gps_values()[0] - yellow_corner[0]), 2) > 0.05:
+                                    print("sx")
+                                    self.ACTION = "go left"
+                                elif round(abs(self.robot.get_gps_values()[0] - yellow_corner[0]), 2) > 0.05:
+                                    print("dx")
+                                    self.ACTION = "go right"
+                                else:
+                                    print("-- arrivato")
+                                    self.ACTION = "stop"
+                                    self.robot.move_fingers(0.1)  # apro le braccia per lasciare il cubo
+                                    self.robot.lift(0.05)  # e le abbasso
+                                    self.box_placed = True
+                                    self.grabbed_box = False
+                                    self.boxes_ids.append(element.get_id())
+                                    if len(self.boxes_ids) < self.total_boxes:
+                                        self.check_for_box = True
+                                        # devo prima andare indietro e poi girare a sinistra
+                                        # indica che non ho ancora girato
+                                        self.turned = False
+                                        self.target_object = None
+                                        self.before_action_gps = self.robot.get_gps_values()
+                                    if len(self.boxes_ids) == self.total_boxes:
+                                        print("raggiunto")
+                                        exit()
 
                     elif self.PREVIOUS_ACTION != "stop":
-                        print(self.ACTION)
-                        print("elif")
                         print("DRITTO")
-                        # leftMotor.setVelocity(0.6 * MAX_SPEED)
-                        # rightMotor.setVelocity(0.6 * MAX_SPEED)
                         self.robot.go_straight()
 
         if self.NEXT_ACTION == "go straight" and self.ACTION == "go right":
@@ -322,43 +347,40 @@ class Brain:
         if self.ACTION == "go right": self.robot.go_right()
         if self.ACTION == "stop": self.robot.stop_sim()
         if self.ACTION == "slow down": self.robot.slow_down()
-        if self.ACTION == "lift box": self.robot.lift(0.0)
+
 
         # if turn_left: do_turn_left(before_action_gps)
         # if straight: go_straight()
-        if self.robot.get_camera_number_objects() == 1 and self.wall_reached and not self.check_for_box:
-            objects = self.robot.get_camera_objects()
-            obj = objects[0]
-            print(round(obj.get_position()[0], ) == 0, round(obj.get_position()[1], 0) == 0,
-                  round(obj.get_position()[2], 0) == 0)
-            print(1 <= round(self.robot.get_gps_values()[0], 1) <= 1.3,
-                  -0.3 <= round(self.robot.get_gps_values()[1], 1) <= -0.2,
-                  1 <= round(self.robot.get_gps_values()[2], 1) <= 1.1)
-            if round(obj.get_position()[0], ) == 0 and \
-                    round(obj.get_position()[1], 0) == 0 and \
-                    round(obj.get_position()[2], 0) == 0 and \
-                    (-3.1 <= round(self.robot.get_gps_values()[0], 1) <= -2.9 and round(self.robot.get_gps_values()[1],
-                                                                                        1) == -0.2 and
-                     -3.5 <= round(self.robot.get_gps_values()[2], 1) <= -3.3) \
-                    or \
-                    (1 <= round(self.robot.get_gps_values()[0], 1) <= 1.3 and -0.3 <= round(
-                        self.robot.get_gps_values()[1],
-                        1) <= -0.2 and
-                     1 <= round(self.robot.get_gps_values()[2], 1) <= 1.1):
-                print("controlli superati")
-                box_placed = True
-                boxes_ids.append(obj.get_id())
-                if len(boxes_ids) < total_boxes:
-                    self.check_for_box = True
-                    # devo prima andare indietro e poi girare a sinistra
-                    # indica che non ho ancora girato
-                    turned = False
-                    self.target_object = None
-                    before_action_gps = self.robot.get_gps_values()
-                if len(boxes_ids) == total_boxes:
-                    print("raggiunto")
-                    exit()
-                    # ACTION = "stop"
+        # if self.robot.get_camera_number_objects() == 1 and self.wall_reached and not self.check_for_box:
+        #     objects = self.robot.get_camera_objects()
+        #     obj = objects[0]
+        #     print(round(obj.get_position()[0], ) == 0, round(obj.get_position()[1], 0) == 0,
+        #           round(obj.get_position()[2], 0) == 0)
+        #     print(1 <= round(self.robot.get_gps_values()[0], 1) <= 1.3,
+        #           -0.3 <= round(self.robot.get_gps_values()[1], 1) <= -0.2,
+        #           1 <= round(self.robot.get_gps_values()[2], 1) <= 1.1)
+        #     if round(obj.get_position()[0], ) == 0 and \
+        #             round(obj.get_position()[1], 0) == 0 and \
+        #             round(obj.get_position()[2], 0) == 0 and \
+        #             (-3.1 <= round(self.robot.get_gps_values()[0], 1) <= -2.9 and round(self.robot.get_gps_values()[1], 1) == -0.2 and
+        #              -3.5 <= round(self.robot.get_gps_values()[2], 1) <= -3.3) \
+        #             or \
+        #             (1 <= round(self.robot.get_gps_values()[0], 1) <= 1.3 and -0.3 <= round(
+        #                 self.robot.get_gps_values()[1], 1) <= -0.2 and 1 <= round(self.robot.get_gps_values()[2], 1) <= 1.1):
+        #         print("controlli superati")
+        #         box_placed = True
+        #         boxes_ids.append(obj.get_id())
+        #         if len(boxes_ids) < total_boxes:
+        #             self.check_for_box = True
+        #             # devo prima andare indietro e poi girare a sinistra
+        #             # indica che non ho ancora girato
+        #             turned = False
+        #             self.target_object = None
+        #             before_action_gps = self.robot.get_gps_values()
+        #         if len(boxes_ids) == total_boxes:
+        #             print("raggiunto")
+        #             exit()
+        #             # ACTION = "stop"
 
         if self.target_object is not None: self.check_for_box = False
         if self.check_for_box: self.check_for_other_box()
@@ -369,13 +391,13 @@ class Brain:
         # print("target obj pos on image", target_object.get_position_on_image())
         print("gps sensor", self.robot.get_gps_values())
 
-        # print("n_objects = ", camera.getRecognitionNumberOfObjects())
-        # objects = camera.getRecognitionObjects()
+        # print("n_objects = ", self.robot.get_camera_number_objects())
+        # objects = self.robot.get_camera_objects()
         # print("objects = ", objects)
         # for obj in objects:
         #     print("colore:", obj.get_colors())
         #     print("posizione:", obj.get_position())
-        print("\n")
+        # print("\n")
 
         pass
 

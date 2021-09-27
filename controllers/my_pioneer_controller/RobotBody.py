@@ -155,5 +155,11 @@ class Body:
         gripper_motors[1].setPosition(position)
         gripper_motors[2].setPosition(position)
 
+    # def set_position(self, position):
+    #     self.left_motor.setPosition(23.0)
+    #     self.right_motor.setPosition(27.0)
+    #     self.left_motor.setVelocity(0.4 * MAX_SPEED)
+    #     self.right_motor.setVelocity(0.4 * MAX_SPEED)
+
     # def get_fingers_position(self):
     #     return [gripper_motors[1].getPosition(), gripper_motors[2].getPosition()]
