@@ -1,22 +1,20 @@
-MAX_SPEED = 6.28
+
 from controller import Robot
+
+MAX_SPEED = 6.28
+GRIPPER_MOTOR_MAX_SPEED = 0.1
+DEFAULT_LIMIT_SPEED = 0.4
+gripper_motors = [None, None, None]
 
 class Body:
     def __init__(self):
-        # robot instance.
-        # self.TIME_STEP = 64
-        self.robot = Robot()
-        print(self.robot.getName())
+        self.robot = Robot()  # robot instance.
         self.TIME_STEP = int(self.robot.getBasicTimeStep())
-        print(self.TIME_STEP)
         self.inertial_unit = self.robot.getDevice('inertial unit')
-        print(self.inertial_unit)
         self.inertial_unit.enable(self.TIME_STEP)
 
         self.gps_sensor = self.robot.getDevice('gps')
         self.gps_sensor.enable(self.TIME_STEP)
-        print(self.gps_sensor)
-        print(self.gps_sensor.getValues())
 
         # self.gps_sensor = self.gps_sensor_enable()
 
@@ -29,8 +27,6 @@ class Body:
         self.compass.enable(self.TIME_STEP)
         self.left_wheel_sensor = self.robot.getDevice('left wheel sensor')
         self.right_wheel_sensor = self.robot.getDevice('right wheel sensor')
-        # self.left_wheel_sensor.enable(self.TIME_STEP)
-        # self.right_wheel_sensor.enable(self.TIME_STEP)
 
         # da sinistra a destra
         self.d0 = self.robot.getDevice('so0')
@@ -70,13 +66,21 @@ class Body:
         self.d15.enable(self.TIME_STEP)
 
         self.sensors = [self.d0, self.d1, self.d2, self.d3, self.d4, self.d5, self.d6, self.d7,
-                   self.d8, self.d9, self.d10, self.d11, self.d12, self.d13, self.d14, self.d15]
+                        self.d8, self.d9, self.d10, self.d11, self.d12, self.d13, self.d14, self.d15]
+
+        gripper_motors[0] = self.robot.getDevice('lift motor')
+        gripper_motors[1] = self.robot.getDevice('left finger motor')
+        gripper_motors[2] = self.robot.getDevice('right finger motor')
+        # gripper_motor_sensor = self.robot.getDevice('right finger sensor')
+
+        self.move_fingers(0.1)
+        self.lift(0.05)
 
         self.left_motor.setPosition(float('inf'))
         self.right_motor.setPosition(float('inf'))
-        self.left_motor.setVelocity(0.6 * MAX_SPEED)
-        self.right_motor.setVelocity(0.6 * MAX_SPEED)
-        print("body")
+        self.left_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
+        self.right_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
+
 
     def get_sensor_value(self, sensor_number):
         return self.sensors[sensor_number].getValue()
@@ -97,13 +101,18 @@ class Body:
 
     def go_straight(self):
         print("avanti")
-        self.left_motor.setVelocity(0.6 * MAX_SPEED)
-        self.right_motor.setVelocity(0.6 * MAX_SPEED)
+        self.left_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
+        self.right_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
+
+    def slow_down(self):
+        print("rallenta")
+        self.left_motor.setVelocity(0.2 * MAX_SPEED)
+        self.right_motor.setVelocity(0.2 * MAX_SPEED)
 
     def go_back(self):
         print("back")
-        self.left_motor.setVelocity(-0.6 * MAX_SPEED)
-        self.right_motor.setVelocity(-0.6 * MAX_SPEED)
+        self.left_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
+        self.right_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
 
     def go_right(self):
         print("destra")
@@ -111,10 +120,11 @@ class Body:
         self.right_motor.setVelocity(0)
 
     def stop_sim(self):
-        print("stop simulazione. Massimo numero di box da riordinare raggiunto")
+        print("stop")
+        # print("stop simulazione. Massimo numero di box da riordinare raggiunto")
         self.left_motor.setVelocity(0)
         self.right_motor.setVelocity(0)
-        exit()
+        # exit()
 
     def get_camera_number_objects(self):
         return self.camera.getRecognitionNumberOfObjects()
@@ -134,3 +144,16 @@ class Body:
     #
     def get_robot(self):
         return self.robot
+
+    def lift(self, position):
+        gripper_motors[0].setVelocity(GRIPPER_MOTOR_MAX_SPEED)
+        gripper_motors[0].setPosition(position)
+
+    def move_fingers(self, position):
+        gripper_motors[1].setVelocity(GRIPPER_MOTOR_MAX_SPEED)
+        gripper_motors[2].setVelocity(GRIPPER_MOTOR_MAX_SPEED)
+        gripper_motors[1].setPosition(position)
+        gripper_motors[2].setPosition(position)
+
+    # def get_fingers_position(self):
+    #     return [gripper_motors[1].getPosition(), gripper_motors[2].getPosition()]

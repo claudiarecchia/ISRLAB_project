@@ -8,11 +8,8 @@
     Paradigma : SENSE-PLAN-ACT
 """
 
-# from RobotBody import Body
-
-from controller import *
 from controllers.my_pioneer_controller.RobotBody import Body
-
+import time
 
 MAX_SPEED = 6.28
 TIME_STEP = 64
@@ -40,6 +37,7 @@ before_action_yaw = None
 saved_yaw = False
 turned = False
 
+
 ACTION = ""
 NEXT_ACTION = ""
 
@@ -52,8 +50,10 @@ class Brain:
         self.target_object = None
         self.ACTION = ""
         self.NEXT_ACTION = ""
+        self.PREVIOUS_ACTION = ""
         self.wall_reached = False
         self.check_for_box = False
+        self.grabbed_box = False
 
     def get_robot(self):
         return self.robot.get_robot()
@@ -202,11 +202,6 @@ class Brain:
     # - perform simulation steps until Webots is stopping the controller
     # while self.robot.step(TIME_STEP) != -1:
     def controller(self):
-        # print("controller")
-        # print(self.robot.get_robot().getName())
-        # print(self.robot.get_robot().step(64))
-        # print("qui")
-        # while self.robot.get_robot().step(TIME_STEP) != -1:
         print("Sensore 0:", self.robot.get_sensor_value(0))
         print("Sensore 1:", self.robot.get_sensor_value(1))
         print("Sensore 2:", self.robot.get_sensor_value(2))
@@ -231,15 +226,18 @@ class Brain:
                     self.target_object = el
                     target_obj_initial_position = el.get_position()
 
-            # prendo il primo della lista
-            # target_object = camera.getRecognitionObjects()[0]
-            # target_obj_initial_position = el.get_position()
-
         # print("target obj:", target_object)
         print("compass:", self.robot.get_compass_values())
 
         if self.target_object is not None and not self.wall_reached and self.robot.get_camera_number_objects() > 0:
             self.ACTION, self.NEXT_ACTION = "", ""
+            print(self.robot.get_camera_objects()[0].get_position()[0])
+            print(self.robot.get_camera_objects()[0].get_position()[1])
+            print(self.robot.get_camera_objects()[0].get_position()[2])
+
+            print(round(self.robot.get_camera_objects()[0].get_position()[0], 2))
+            print(round(self.robot.get_camera_objects()[0].get_position()[1], 2))
+            print(round(self.robot.get_camera_objects()[0].get_position()[2], 2))
             for element in self.robot.get_camera_objects():
                 if element.get_id() == self.target_object.get_id():
                     if element.get_position()[0] < -0.04:  # il target è a sinistra
@@ -256,7 +254,30 @@ class Brain:
                         # leftMotor.setVelocity(0.6 * MAX_SPEED)
                         # rightMotor.setVelocity(0)
                         self.robot.go_right()
-                    else:
+
+                    # se mi avvicino a un box rallento
+                    elif not self.grabbed_box and round(self.robot.get_camera_objects()[0].get_position()[0], 2) <= -0.01 and \
+                         round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
+                         round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.3:
+                        self.robot.move_fingers(0.03)
+                        self.ACTION = "slow down"
+
+                    # se davanti ho un box e lo afferro
+                    elif round(self.robot.get_camera_objects()[0].get_position()[0], 1) >= -0.0 and \
+                            round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
+                            round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.27:
+                        self.ACTION = "stop"
+                        self.PREVIOUS_ACTION = "stop"
+                        self.grabbed_box = True
+
+                        print("Box AFFERRATO")
+                        # time.sleep(0.2)
+                        self.robot.lift(0.0)
+                        # self.ACTION = "lift box"
+
+                    elif self.PREVIOUS_ACTION != "stop":
+                        print(self.ACTION)
+                        print("elif")
                         print("DRITTO")
                         # leftMotor.setVelocity(0.6 * MAX_SPEED)
                         # rightMotor.setVelocity(0.6 * MAX_SPEED)
@@ -300,6 +321,8 @@ class Brain:
         if self.ACTION == "go straight": self.robot.go_straight()
         if self.ACTION == "go right": self.robot.go_right()
         if self.ACTION == "stop": self.robot.stop_sim()
+        if self.ACTION == "slow down": self.robot.slow_down()
+        if self.ACTION == "lift box": self.robot.lift(0.0)
 
         # if turn_left: do_turn_left(before_action_gps)
         # if straight: go_straight()
@@ -315,11 +338,12 @@ class Brain:
                     round(obj.get_position()[1], 0) == 0 and \
                     round(obj.get_position()[2], 0) == 0 and \
                     (-3.1 <= round(self.robot.get_gps_values()[0], 1) <= -2.9 and round(self.robot.get_gps_values()[1],
-                                                                                  1) == -0.2 and
+                                                                                        1) == -0.2 and
                      -3.5 <= round(self.robot.get_gps_values()[2], 1) <= -3.3) \
                     or \
-                    (1 <= round(self.robot.get_gps_values()[0], 1) <= 1.3 and -0.3 <= round(self.robot.get_gps_values()[1],
-                                                                                      1) <= -0.2 and
+                    (1 <= round(self.robot.get_gps_values()[0], 1) <= 1.3 and -0.3 <= round(
+                        self.robot.get_gps_values()[1],
+                        1) <= -0.2 and
                      1 <= round(self.robot.get_gps_values()[2], 1) <= 1.1):
                 print("controlli superati")
                 box_placed = True
@@ -362,4 +386,3 @@ if __name__ == "__main__":
     brain = Brain()
     while brain.get_robot().step(TIME_STEP) != -1:
         brain.controller()
-
