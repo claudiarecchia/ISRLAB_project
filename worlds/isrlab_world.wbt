@@ -3,8 +3,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.44939632954734327 -0.7964772873427103 -0.40455762226977415 4.605403889663091
-  position 0.7320137867352501 3.3491810723421964 -2.120327010088566
+  orientation 0.31161066607012083 -0.8844123461606743 -0.34743862011858595 4.500421316520869
+  position 3.992052746095042 3.565256940863505 -1.0743539023816966
 }
 TexturedBackground {
 }
@@ -51,7 +51,6 @@ Solid {
 }
 Solid {
   translation 1.04589 -0.2 0.833601
-  scale 2 2 2
   children [
     Shape {
       appearance Appearance {
@@ -60,13 +59,13 @@ Solid {
         }
       }
       geometry Box {
-        size 0.08 0.08 0.08
+        size 0.1 0.1 0.1
       }
     }
   ]
   name "green box"
   boundingObject Box {
-    size 0.08 0.08 0.08
+    size 0.1 0.1 0.1
   }
   physics Physics {
     mass 0.1

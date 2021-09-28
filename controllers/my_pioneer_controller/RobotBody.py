@@ -156,8 +156,20 @@ class Body:
         gripper_motors[1].setPosition(position)
         gripper_motors[2].setPosition(position)
 
-    def get_number_wall_sensors(self):
-        return sum(s.getValue() > MAX_SENSOR_VALUE for s in self.sensors)
+    def get_number_wall_sensors(self, side):
+        value = 0
+        if side == "sx":
+            for i in range(0, 3):
+                if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
+                    value += 1
+        if side == "dx":
+            for i in range(4, 7):
+                if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
+                    value += 1
+        else:
+            value = sum(s.getValue() > MAX_SENSOR_VALUE for s in self.sensors)
+        return value
+
 
     # def set_position(self, position):
     #     self.left_motor.setPosition(23.0)
