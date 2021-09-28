@@ -12,33 +12,19 @@ from controllers.my_pioneer_controller.RobotBody import Body
 
 MAX_SPEED = 6.28
 TIME_STEP = 64
-stop = False
-count = 0
-wall_reached_gps = None
-wall_reached_compass = None
-high_sensors = []
-wall_reached = False
-stopped = False
-target_object = None
-prev_sensors = []
-target_obj_initial_position = None
-left = False
-right = False
-before_turning_left_compass = []
+
+
 turn_left = False
-before_action_gps = []
+# before_action_gps = []
 straight = False
 box_placed = False
-total_boxes = 3
-check_for_box = False
-before_action_yaw = None
-saved_yaw = False
 turned = False
 
 ACTION = ""
 NEXT_ACTION = ""
 
 yellow_corner = [-2.9, -0.2, -3.3]
+red_corner = [1.19, -0.2, -3.3]
 
 
 class Brain:
@@ -57,23 +43,32 @@ class Brain:
         self.total_boxes = 3
         self.before_action_gps = []
         self.turned = False
+        # self.target_obj_initial_position = []
+        self.wall_reached_gps = []
+        self.wall_reached_compass = []
+        self.saved_yaw = False
+        self.before_action_yaw = None
+        self.orientation_set = False
 
     def get_robot(self):
         return self.robot.get_robot()
 
     def check_wall_reached(self):
-        global count, wall_reached_gps, wall_reached_compass, straight, before_action_gps, ACTION
         # più di 1 sensore misura un valore elevato => parete
         # FRONT WALL REACHED => ho la parete davanti, allora devo andare indietro
         # if sum(s.getValue() > 950 for s in sensors) > 1:
-        if self.robot.get_sensor_value(3) > 950 and self.robot.get_sensor_value(
-                4) > 950 and ACTION != "go left" and ACTION != "go right":
-            print("WALL REACHED")
-            wall_reached_gps = self.robot.get_gps_values()
-            wall_reached_compass = self.robot.get_compass_values()
-            print("GO BACK")
-            ACTION = "go back"
 
+        # if self.robot.get_sensor_value(3) > 950 and self.robot.get_sensor_value(
+        #         4) > 950 and ACTION != "go left" and ACTION != "go right":
+        if self.robot.get_number_wall_sensors() > 2:
+            print("WALL REACHED")
+            self.wall_reached_gps = self.robot.get_gps_values()
+            self.wall_reached_compass = self.robot.get_compass_values()
+
+            if self.grabbed_box: self.leave_box()
+
+            print("GO BACK")
+            self.ACTION = "go back"
             self.wall_reached = True
             # Se ci sono più sensori che misurano un valore elevato sono in un angolo
             # (posso aver portato un cubo in posizione)
@@ -87,48 +82,45 @@ class Brain:
             return False
 
     def turn_after_wall_reached(self):
-        global wall_reached_gps, before_action_yaw, saved_yaw
-
-        if abs(wall_reached_gps[0] - self.robot.get_gps_values()[0]) > 0.3 or abs(
-                wall_reached_gps[1] - self.robot.get_gps_values()[1]) > 0.3 or abs(
-            wall_reached_gps[2] - self.robot.get_gps_values()[2]) > 0.3:
+        print("turn after wall reached")
+        # vado indietro perchè ho raggiunto la parete
+        if abs(self.wall_reached_gps[0] - self.robot.get_gps_values()[0]) > 0.3 or abs(
+                self.wall_reached_gps[1] - self.robot.get_gps_values()[1]) > 0.3 or abs(
+            self.wall_reached_gps[2] - self.robot.get_gps_values()[2]) > 0.3:
 
             # di default, vado a destra ma se sono in una situazione limite allora applico un'altra regola
             if self.robot.get_sensor_value(7) < 900:
+                # print("gira a destra - turn")
                 self.ACTION = "go right"
                 self.NEXT_ACTION = "go straight"
                 # salvo le informazioni per poter girare di 90 gradi
                 # evito la sovrascrittura
-                if not saved_yaw:
-                    before_action_yaw = self.robot.get_yaw()
+                if not self.saved_yaw:
+                    self.before_action_yaw = self.robot.get_yaw()
                     print("SALVATO")
-                    saved_yaw = True
+                    self.saved_yaw = True
 
             else:
+                # print("gira a sinistra - turn")
                 # a destra ho un muro, quindi giro a sinistra (parte opposta)
                 self.ACTION = "go left"
                 self.NEXT_ACTION = "go straight"
                 # evito la sovrascrittura
-                if not saved_yaw:
-                    before_action_yaw = self.robot.get_yaw()
+                if not self.saved_yaw:
+                    self.before_action_yaw = self.robot.get_yaw()
                     print("SALVATO")
-                    saved_yaw = True
+                    self.saved_yaw = True
 
     def do_turn_left(self, before_action_gps):
-        global turn_left, straight
         print("valori")
-        print(abs(before_action_gps[0] - self.robot.get_gps_values()[0]))
-        print(abs(before_action_gps[1] - self.robot.get_gps_values()[1]))
-        print(abs(before_action_gps[2] - self.robot.get_gps_values()[2]))
-        if abs(before_action_gps[0] - self.robot.get_gps_values()[0]) > 0.5 or \
-                abs(before_action_gps[1] - self.robot.get_gps_values()[1]) > 0.5 or \
-                abs(before_action_gps[2] - self.robot.get_gps_values()[2]) > 0.5:
+        print(abs(self.before_action_gps[0] - self.robot.get_gps_values()[0]))
+        print(abs(self.before_action_gps[1] - self.robot.get_gps_values()[1]))
+        print(abs(self.before_action_gps[2] - self.robot.get_gps_values()[2]))
+        if abs(self.before_action_gps[0] - self.robot.get_gps_values()[0]) > 0.5 or \
+                abs(self.before_action_gps[1] - self.robot.get_gps_values()[1]) > 0.5 or \
+                abs(self.before_action_gps[2] - self.robot.get_gps_values()[2]) > 0.5:
             print("TURN LEFT")
             self.ACTION = "go left"
-            # go_left()
-            # print(abs(round(before_turning_left_compass[0]) - round(compass.getValues()[2])))
-            # print(abs((before_turning_left_compass[0]) - (compass.getValues()[2])))
-            # if round(abs(before_turning_left_compass[0] - (compass.getValues()[2])), 2) == 0.97 and d7.getValue() > 900:
 
             # TODO considerare la differenza con un valore salvato precedentemente
             if self.robot.get_yaw() <= -1.55:  # -pi/2 = ovest
@@ -136,37 +128,6 @@ class Brain:
                 self.ACTION = "go straight"
                 # turn_left = False
                 # straight = True
-
-    def go_left(self):
-        # print("sinistra")
-        # leftMotor.setVelocity(0)
-        # rightMotor.setVelocity(0.4 * MAX_SPEED)
-        self.robot.go_left()
-
-    def go_straight(self):
-        # print("avanti")
-        # leftMotor.setVelocity(0.6 * MAX_SPEED)
-        # rightMotor.setVelocity(0.6 * MAX_SPEED)
-        self.robot.go_straight()
-
-    def go_back(self):
-        # print("back")
-        # leftMotor.setVelocity(-0.6 * MAX_SPEED)
-        # rightMotor.setVelocity(-0.6 * MAX_SPEED)
-        self.robot.go_back()
-
-    def go_right(self):
-        # print("destra")
-        # leftMotor.setVelocity(0.4 * MAX_SPEED)
-        # rightMotor.setVelocity(0)
-        self.robot.go_right()
-
-    def stop_sim(self):
-        # print("stop simulazione. Massimo numero di box da riordinare raggiunto")
-        # leftMotor.setVelocity(0)
-        # rightMotor.setVelocity(0)
-        # exit()
-        self.robot.stop_sim()
 
     def check_for_other_box(self):
         global before_action_gps, box_placed, turned
@@ -195,6 +156,30 @@ class Brain:
 
         # TODO aggiungere sensore speculare a d7
 
+    def leave_box(self):
+        print("-- arrivato")
+        self.ACTION = "stop"
+        self.robot.move_fingers(0.1)  # apro le braccia per lasciare il cubo
+        self.robot.lift(0.05)  # e le abbasso
+        self.box_placed = True
+        self.grabbed_box = False
+        self.PREVIOUS_ACTION = ""
+        objects = self.robot.get_camera_objects()
+        for obj in objects:
+            if obj.get_id() == self.target_object.get_id():
+                self.boxes_ids.append(obj.get_id())
+        if len(self.boxes_ids) < self.total_boxes:
+            self.check_for_box = True
+            # devo prima andare indietro e poi girare a sinistra
+            # indica che non ho ancora girato
+            self.turned = False
+            self.target_object = None
+            self.before_action_gps = self.robot.get_gps_values()
+            # self.ACTION = "go back"
+        if len(self.boxes_ids) == self.total_boxes:
+            print("raggiunto")
+            exit()
+
     # Main loop:
     # - perform simulation steps until Webots is stopping the controller
     # while self.robot.step(TIME_STEP) != -1:
@@ -221,10 +206,9 @@ class Brain:
                 if el.get_id() not in self.boxes_ids:
                     print("id: ", el.get_id())
                     self.target_object = el
-                    target_obj_initial_position = el.get_position()
+                    # self.target_obj_initial_position = el.get_position()
 
-        # print("target obj:", target_object)
-        print("compass:", self.robot.get_compass_values())
+        # print("compass:", self.robot.get_compass_values())
 
         if self.target_object is not None and not self.wall_reached and self.robot.get_camera_number_objects() > 0:
             self.ACTION, self.NEXT_ACTION = "", ""
@@ -240,71 +224,96 @@ class Brain:
                     if element.get_position()[0] < -0.04:  # il target è a sinistra
                         # giro leggermente a sinistra per centrarlo
                         print("TARGET A SINISTRA")
-                        # left = True
-                        # leftMotor.setVelocity(0)
-                        # rightMotor.setVelocity(0.6 * MAX_SPEED)
                         self.robot.go_left()
-                    elif self.robot.get_camera_objects()[0].get_position()[0] > 0.04:  # il target è a destra
+                    # elif self.robot.get_camera_objects()[0].get_position()[0] > 0.04:  # il target è a destra
+                    elif element.get_position()[0] > 0.04:  # il target è a destra
                         # giro leggermente a destra per centrarlo
                         print("TARGET A DESTRA")
-                        # right = True
-                        # leftMotor.setVelocity(0.6 * MAX_SPEED)
-                        # rightMotor.setVelocity(0)
                         self.robot.go_right()
 
-                    # se mi avvicino a un box rallento
-                    elif not self.grabbed_box and not self.check_for_box and \
-                            round(self.robot.get_camera_objects()[0].get_position()[0], 2) <= -0.01 and \
-                            round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
-                            round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.3:
-                        self.robot.move_fingers(0.03)
-                        self.ACTION = "slow down"
-
                     # se davanti ho un box e lo afferro
-                    elif self.PREVIOUS_ACTION != "stop" and round(self.robot.get_camera_objects()[0].get_position()[0], 1) >= -0.0 and \
-                            round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
-                            round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.27:
+                    # elif self.PREVIOUS_ACTION != "stop" and round(self.robot.get_camera_objects()[0].get_position()[0], 1) >= -0.0 and \
+                    #         round(self.robot.get_camera_objects()[0].get_position()[1], 2) >= -0.05 and \
+                    #         round(self.robot.get_camera_objects()[0].get_position()[2], 2) >= -0.27:
+                    # elif not self.grabbed_box and round(element.get_position()[0], 1) >= -0.0 and \
+                    #         round(element.get_position()[1], 2) >= -0.05 and \
+                    #         round(element.get_position()[2], 2) >= -0.27:
+                    elif not self.grabbed_box and \
+                         round(element.get_position()[1], 2) >= -0.05 and \
+                         round(element.get_position()[2], 2) >= -0.27:
                         self.ACTION = "stop"
                         self.PREVIOUS_ACTION = "stop"
                         self.grabbed_box = True
+                        self.orientation_set = False
                         print("Box AFFERRATO")
                         self.robot.lift(0.0)
 
-                    elif self.grabbed_box:
-                        if element.get_colors() == [1.0, 1.0, 0.0]:  # giallo
-                            print("set position")
-                            if not self.wall_reached:
-                                # vado avanti finchè posso
-                                # quando mi accorgo che mi sto allontanando dal target modifico la direzione
-                                if round(abs(self.robot.get_gps_values()[2] - yellow_corner[2]), 2) > 0.1:
-                                    print("dritto")
-                                    self.ACTION = "go straight"
-                                elif round(abs(self.robot.get_gps_values()[0] - yellow_corner[0]), 2) > 0.05:
-                                    print("sx")
-                                    self.ACTION = "go left"
-                                elif round(abs(self.robot.get_gps_values()[0] - yellow_corner[0]), 2) > 0.05:
-                                    print("dx")
-                                    self.ACTION = "go right"
-                                else:
-                                    print("-- arrivato")
-                                    self.ACTION = "stop"
-                                    self.robot.move_fingers(0.1)  # apro le braccia per lasciare il cubo
-                                    self.robot.lift(0.05)  # e le abbasso
-                                    self.box_placed = True
-                                    self.grabbed_box = False
-                                    self.boxes_ids.append(element.get_id())
-                                    if len(self.boxes_ids) < self.total_boxes:
-                                        self.check_for_box = True
-                                        # devo prima andare indietro e poi girare a sinistra
-                                        # indica che non ho ancora girato
-                                        self.turned = False
-                                        self.target_object = None
-                                        self.before_action_gps = self.robot.get_gps_values()
-                                    if len(self.boxes_ids) == self.total_boxes:
-                                        print("raggiunto")
-                                        exit()
+                    # se mi avvicino a un box rallento
+                    # elif not self.grabbed_box and not self.check_for_box and \
+                    #         round(element.get_position()[0], 2) <= -0.01 and \
+                    #         round(element.get_position()[1], 2) >= -0.05 and \
+                    #         round(element.get_position()[2], 2) >= -0.3:
+                    elif not self.grabbed_box and not self.check_for_box and \
+                         round(element.get_position()[1], 2) >= -0.05 and \
+                         round(element.get_position()[2], 2) >= -0.36:  # asse z => più è maggiore, più mi sto avvicinando al box
+                        self.robot.move_fingers(0.03)
+                        self.ACTION = "slow down"
 
-                    elif self.PREVIOUS_ACTION != "stop":
+                    elif self.grabbed_box:
+                        print(element.get_colors())
+
+                        # if element.get_colors() == [1.0, 1.0, 0.0]:  # giallo
+                        #     print("set position")
+                        #     # if not self.wall_reached:
+                        #     # vado avanti finchè posso
+                        #     # quando mi accorgo che mi sto allontanando dal target modifico la direzione
+                        #     if round(abs(self.robot.get_gps_values()[2] - yellow_corner[2]), 2) > 0.1:
+                        #         print("dritto")
+                        #         self.ACTION = "go straight"
+                        #     elif round(abs(self.robot.get_gps_values()[0] - yellow_corner[0]), 2) > 0.05:
+                        #         print("sx")
+                        #         self.ACTION = "go left"
+                        #     elif round(abs(self.robot.get_gps_values()[0] - yellow_corner[0]), 2) > 0.05:
+                        #         print("dx")
+                        #         self.ACTION = "go right"
+
+                        if element.get_colors() == [1.0, 1.0, 0.0]:  # giallo
+                            print("giallo set position")
+                            # giro il robot per puntare nella corretta direzione rispetto all'angolo di yaw
+                            if round(self.robot.get_yaw(), 1) > -0.5 and not self.orientation_set:
+                                print("uno")
+                                self.ACTION = "go left"
+
+                            elif round(self.robot.get_yaw(), 1) < -0.5 and not self.orientation_set:
+                                print("due")
+                                self.ACTION = "go right"
+
+                            else:
+                                print("tre")
+                                self.orientation_set = True
+                                print("dritto")
+                                self.ACTION = "go straight"
+
+                        elif element.get_colors() == [1.0, 0.0, 0.0]:  # rosso
+                            print("rosso set position")
+
+                            # giro il robot per puntare nella corretta direzione rispetto all'angolo di yaw
+                            if round(self.robot.get_yaw(), 1) > 0.5 and not self.orientation_set:
+                                print("uno")
+                                self.ACTION = "go left"
+
+                            elif round(self.robot.get_yaw(), 1) < 0.5 and not self.orientation_set:
+                                print("due")
+                                self.ACTION = "go right"
+
+                            else:
+                                print("tre")
+                                self.orientation_set = True
+                                print("dritto")
+                                self.ACTION = "go straight"
+
+                    # elif self.PREVIOUS_ACTION != "stop":
+                    else:
                         print("DRITTO")
                         self.robot.go_straight()
 
@@ -312,34 +321,51 @@ class Brain:
             print("qui")
             # gira a destra finchè non raggiunge la posizione esatta verso destra (est)
             # if round((inertial_unit.getRollPitchYaw())[1] >= 1.5):  # pi/2 = est
-            print("yaw:", abs(before_action_yaw - self.robot.get_yaw()))
-            print("yaw:", abs(before_action_yaw - (self.robot.get_yaw())) >= 1.2)
-            if abs(before_action_yaw - (self.robot.get_yaw())) >= 1.5:
-                before_action_gps = self.robot.get_gps_values()
-                # quando raggiunge est, deve rigirare a sinistra
+            print("yaw:", abs(self.before_action_yaw - self.robot.get_yaw()))
+            print("yaw:", abs(self.before_action_yaw - (self.robot.get_yaw())) >= 1.2)
+
+            if not self.check_for_box:
+                if abs(self.before_action_yaw - (self.robot.get_yaw())) >= 1.5:
+                    self.before_action_gps = self.robot.get_gps_values()
+                    # quando raggiunge est, deve rigirare a sinistra
+                    self.wall_reached = False
+                    self.saved_yaw = False
+                    self.ACTION = "go straight"
+                    self.NEXT_ACTION = "go left"
+            # se devo cercare un nuovo box, allora smetto di girare quando ne trovo uno
+            else:
                 self.wall_reached = False
-                saved_yaw = False
-                self.ACTION = "go straight"
-                self.NEXT_ACTION = "go left"
+                self.saved_yaw = False
+                # l'azione rimane la stessa
+                if self.target_object is not None:
+                    self.ACTION = "go straight"
 
         if self.NEXT_ACTION == "go left" and self.ACTION == "go straight":
-            if abs(before_action_gps[0] - self.robot.get_gps_values()[0]) > 0.5 or \
-                    abs(before_action_gps[1] - self.robot.get_gps_values()[1]) > 0.5 or \
-                    abs(before_action_gps[2] - self.robot.get_gps_values()[2]) > 0.5:
+            if abs(self.before_action_gps[0] - self.robot.get_gps_values()[0]) > 0.5 or \
+                    abs(self.before_action_gps[1] - self.robot.get_gps_values()[1]) > 0.5 or \
+                    abs(self.before_action_gps[2] - self.robot.get_gps_values()[2]) > 0.5:
                 self.wall_reached = False
                 print("TURN LEFT")
-                ACTION = "go left"
-                NEXT_ACTION = "go straight"
+                self.ACTION = "go left"
+                self.NEXT_ACTION = "go straight"
 
         if self.NEXT_ACTION == "go straight" and self.ACTION == "go left":
             # if (inertial_unit.getRollPitchYaw())[1] <= -1.55:  # -pi/2 = ovest
-            print("yaw:", abs(before_action_yaw - (self.robot.get_yaw())))
+            print("yaw:", abs(self.before_action_yaw - (self.robot.get_yaw())))
             # print("yaw:", abs(before_action_yaw - (inertial_unit.getRollPitchYaw())[1]) >= 1.2 )
-            if abs(before_action_yaw - (self.robot.get_yaw()) >= 1.5):
+            if not self.check_for_box:
+                if abs(self.before_action_yaw - (self.robot.get_yaw()) >= 1.5):
+                    self.wall_reached = False
+                    self.saved_yaw = False
+                    print("vai avanti")
+                    self.ACTION = "go straight"
+            # se devo cercare un nuovo box, allora smetto di girare quando ne trovo uno
+            else:
                 self.wall_reached = False
-                saved_yaw = False
-                print("vai avanti")
-                ACTION = "go straight"
+                self.saved_yaw = False
+                # l'azione rimane la stessa
+                if self.target_object is not None:
+                    self.ACTION = "go straight"
 
         if self.ACTION == "go back": self.robot.go_back()
         if self.ACTION == "go left": self.robot.go_left()
@@ -386,7 +412,7 @@ class Brain:
         if self.check_for_box: self.check_for_other_box()
 
         self.check_wall_reached()
-        if self.wall_reached: self.turn_after_wall_reached()
+        if self.wall_reached and not self.grabbed_box: self.turn_after_wall_reached()
 
         # print("target obj pos on image", target_object.get_position_on_image())
         print("gps sensor", self.robot.get_gps_values())
@@ -397,7 +423,7 @@ class Brain:
         # for obj in objects:
         #     print("colore:", obj.get_colors())
         #     print("posizione:", obj.get_position())
-        # print("\n")
+        print("\n")
 
         pass
 

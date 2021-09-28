@@ -5,6 +5,7 @@ MAX_SPEED = 6.28
 GRIPPER_MOTOR_MAX_SPEED = 0.1
 DEFAULT_LIMIT_SPEED = 0.4
 gripper_motors = [None, None, None]
+MAX_SENSOR_VALUE = 940
 
 class Body:
     def __init__(self):
@@ -154,6 +155,9 @@ class Body:
         gripper_motors[2].setVelocity(GRIPPER_MOTOR_MAX_SPEED)
         gripper_motors[1].setPosition(position)
         gripper_motors[2].setPosition(position)
+
+    def get_number_wall_sensors(self):
+        return sum(s.getValue() > MAX_SENSOR_VALUE for s in self.sensors)
 
     # def set_position(self, position):
     #     self.left_motor.setPosition(23.0)

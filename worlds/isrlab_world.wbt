@@ -3,8 +3,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.9998930481080043 0.014613620805959975 0.0005783011532430862 5.294957151722083
-  position -1.227746000778092 6.935150863154892 4.010187604636869
+  orientation 0.44939632954734327 -0.7964772873427103 -0.40455762226977415 4.605403889663091
+  position 0.7320137867352501 3.3491810723421964 -2.120327010088566
 }
 TexturedBackground {
 }
@@ -21,9 +21,8 @@ RectangleArena {
   wallHeight 0.5
 }
 Solid {
-  translation -2.59652 -0.206278 -2.19418
+  translation -2.59652 -0.246278 -2.19418
   rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
-  scale 2 2 2
   children [
     Shape {
       appearance Appearance {
@@ -32,16 +31,19 @@ Solid {
         }
       }
       geometry Box {
-        size 0.08 0.08 0.08
+        size 0.1 0.1 0.1
       }
     }
   ]
   name "yellow box"
   boundingObject Box {
-    size 0.08 0.08 0.08
+    size 0.1 0.1 0.1
   }
   physics Physics {
-    mass 0.1
+    mass 0.055
+    centerOfMass [
+      0 0 0
+    ]
   }
   recognitionColors [
     1 1 0
@@ -97,7 +99,6 @@ Pioneer3dx {
 }
 Solid {
   translation 0.178275 -0.2 -1.39892
-  scale 2 2 2
   children [
     Shape {
       appearance Appearance {
@@ -106,12 +107,13 @@ Solid {
         }
       }
       geometry Box {
-        size 0.08 0.08 0.08
+        size 0.1 0.1 0.1
       }
     }
   ]
+  name "red box"
   boundingObject Box {
-    size 0.08 0.08 0.08
+    size 0.1 0.1 0.1
   }
   physics Physics {
     mass 0.1
