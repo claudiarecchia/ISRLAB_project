@@ -3,8 +3,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.31161066607012083 -0.8844123461606743 -0.34743862011858595 4.500421316520869
-  position 3.992052746095042 3.565256940863505 -1.0743539023816966
+  orientation 0.36723238418887466 -0.8357746712364872 -0.4081924483898454 4.44604069529471
+  position 2.788421602613204 5.893862942235679 -2.428122568059079
 }
 TexturedBackground {
 }
@@ -30,12 +30,45 @@ Solid {
           emissiveColor 1 1 0
         }
       }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "yellow box"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.055
+    centerOfMass [
+      0 -0.0011 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 1 0
+  ]
+}
+Solid {
+  translation 0.160836 -0.246278 -0.0364636
+  rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 0 0 1
+        }
+      }
       geometry Box {
         size 0.1 0.1 0.1
       }
     }
   ]
-  name "yellow box"
+  name "blue box"
   boundingObject Box {
     size 0.1 0.1 0.1
   }
@@ -46,11 +79,11 @@ Solid {
     ]
   }
   recognitionColors [
-    1 1 0
+    0 0 1
   ]
 }
 Solid {
-  translation 1.04589 -0.2 0.833601
+  translation -0.977659 -0.2 0.330425
   children [
     Shape {
       appearance Appearance {
@@ -58,17 +91,24 @@ Solid {
           emissiveColor 0 1 0
         }
       }
-      geometry Box {
-        size 0.1 0.1 0.1
+      geometry Sphere {
+        radius 0.06
       }
     }
   ]
   name "green box"
-  boundingObject Box {
-    size 0.1 0.1 0.1
+  boundingObject Sphere {
+    radius 0.06
   }
   physics Physics {
-    mass 0.1
+    mass 0.055
+    centerOfMass [
+      0 -0.0001 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
   }
   recognitionColors [
     0 1 0
@@ -105,17 +145,24 @@ Solid {
           emissiveColor 1 0 0
         }
       }
-      geometry Box {
-        size 0.1 0.1 0.1
+      geometry Sphere {
+        radius 0.06
       }
     }
   ]
   name "red box"
-  boundingObject Box {
-    size 0.1 0.1 0.1
+  boundingObject Sphere {
+    radius 0.06
   }
   physics Physics {
-    mass 0.1
+    mass 0.055
+    centerOfMass [
+      0 -0.0001 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
   }
   recognitionColors [
     1 0 0

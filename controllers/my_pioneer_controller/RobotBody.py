@@ -107,8 +107,8 @@ class Body:
 
     def slow_down(self):
         print("rallenta")
-        self.left_motor.setVelocity(0.2 * MAX_SPEED)
-        self.right_motor.setVelocity(0.2 * MAX_SPEED)
+        self.left_motor.setVelocity(0.1 * MAX_SPEED)
+        self.right_motor.setVelocity(0.1 * MAX_SPEED)
 
     def go_back(self):
         print("back")
