@@ -5,7 +5,8 @@ MAX_SPEED = 6.28
 GRIPPER_MOTOR_MAX_SPEED = 0.1
 DEFAULT_LIMIT_SPEED = 0.4
 gripper_motors = [None, None, None]
-MAX_SENSOR_VALUE = 940
+MAX_SENSOR_VALUE = 930
+MAX_SENSOR_VALUE_WALL_REACH = 970
 
 class Body:
     def __init__(self):
@@ -156,20 +157,70 @@ class Body:
         gripper_motors[1].setPosition(position)
         gripper_motors[2].setPosition(position)
 
-    def get_number_wall_sensors(self, side):
+    # def get_number_wall_sensors(self, side=None):
+    #     value = 0
+    #     if side == "sx":
+    #         for i in range(0, 3+1):
+    #             if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
+    #                 print(self.sensors[i].getValue())
+    #                 value += 1
+    #     if side == "dx":
+    #         for i in range(4, 7+1):
+    #             if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
+    #                 value += 1
+    #     else:
+    #         value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in self.sensors)
+    #     print(value)
+    #     return value
+
+    def get_number_wall_sensors(self, side=None):
+        sublist = []
         value = 0
         if side == "sx":
-            for i in range(0, 3):
-                if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
-                    value += 1
-        if side == "dx":
-            for i in range(4, 7):
-                if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
-                    value += 1
+            sublist = self.sensors[0:4]
+            value = sum(MAX_SENSOR_VALUE < s.getValue() < MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
+        elif side == "dx":
+            sublist = self.sensors[4:8]
+            value = sum(MAX_SENSOR_VALUE < s.getValue() < MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
         else:
-            value = sum(s.getValue() > MAX_SENSOR_VALUE for s in self.sensors)
+            sublist = self.sensors
+            value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
         return value
 
+    def balance_walls(self, side=None):
+        sublist = []
+        value = 0
+
+        if side == "sx":
+            sublist = self.sensors[0:4]
+        elif side == "dx":
+            sublist = self.sensors[4:8]
+
+        value = sum(s.getValue() for s in sublist)
+        print("balance walls:", value)
+        return value
+
+    # def get_number_wall_sensors_left(self):
+    #     value = 0
+    #     if self.sensors[0].getValue() > MAX_SENSOR_VALUE:
+    #         value += 1
+    #     if self.sensors[1].getValue() > MAX_SENSOR_VALUE:
+    #         value += 1
+    #     if self.sensors[2].getValue() > MAX_SENSOR_VALUE:
+    #         value += 1
+    #     if self.sensors[3].getValue() > MAX_SENSOR_VALUE:
+    #         value += 1
+    #     return value
+
+    def get_number_wall_sensors_right(self):
+        sublist = self.sensors[4:8]
+        value = 0
+        sum = 0
+        for sensor in sublist:
+            sum += sensor.getValue()
+            if sensor.getValue() > MAX_SENSOR_VALUE:
+                value += 1
+        return value
 
     # def set_position(self, position):
     #     self.left_motor.setPosition(23.0)

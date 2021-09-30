@@ -3,8 +3,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.36723238418887466 -0.8357746712364872 -0.4081924483898454 4.44604069529471
-  position 2.788421602613204 5.893862942235679 -2.428122568059079
+  orientation 0.97061437865851 -0.15825644346192638 -0.1812805175525946 4.581580059840988
+  position -1.901773442134565 11.06006270711764 -3.186508504753583
 }
 TexturedBackground {
 }
@@ -40,9 +40,9 @@ Solid {
     radius 0.06
   }
   physics Physics {
-    mass 0.055
+    mass 0.1
     centerOfMass [
-      0 -0.0011 0
+      0 0 0
     ]
     damping Damping {
       linear 0.17
@@ -101,9 +101,9 @@ Solid {
     radius 0.06
   }
   physics Physics {
-    mass 0.055
+    mass 0.1
     centerOfMass [
-      0 -0.0001 0
+      0 0 0
     ]
     damping Damping {
       linear 0.17
@@ -155,9 +155,9 @@ Solid {
     radius 0.06
   }
   physics Physics {
-    mass 0.055
+    mass 0.1
     centerOfMass [
-      0 -0.0001 0
+      0 0 0
     ]
     damping Damping {
       linear 0.17
