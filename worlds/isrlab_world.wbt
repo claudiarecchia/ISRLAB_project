@@ -119,8 +119,6 @@ Pioneer3dx {
   controller "<extern>"
   extensionSlot [
     InertialUnit {
-      xAxis FALSE
-      zAxis FALSE
     }
     DEF GRIPPER_BASE Pioneer3Gripper {
       translation 0 0.026 -0.135

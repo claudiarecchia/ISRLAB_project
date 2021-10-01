@@ -7,6 +7,8 @@ DEFAULT_LIMIT_SPEED = 0.4
 gripper_motors = [None, None, None]
 MAX_SENSOR_VALUE = 930
 MAX_SENSOR_VALUE_WALL_REACH = 970
+MIN_SENSOR_VALUE_TO_TURN = 900
+WALL = 1000
 
 class Body:
     def __init__(self):
@@ -94,7 +96,7 @@ class Body:
         return self.compass.getValues()
 
     def get_yaw(self):
-        return self.inertial_unit.getRollPitchYaw()[1]
+        return self.inertial_unit.getRollPitchYaw()[2]
 
     def go_left(self):
         print("sinistra")
@@ -113,8 +115,8 @@ class Body:
 
     def go_back(self):
         print("back")
-        self.left_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
-        self.right_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
+        self.left_motor.setVelocity(-0.3 * MAX_SPEED)
+        self.right_motor.setVelocity(-0.3 * MAX_SPEED)
 
     def go_right(self):
         print("destra")
@@ -185,19 +187,18 @@ class Body:
         else:
             sublist = self.sensors
             value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
+
         return value
 
-    def balance_walls(self, side=None):
+    def balance_wall(self, side=None):
         sublist = []
         value = 0
-
         if side == "sx":
             sublist = self.sensors[0:4]
+            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
         elif side == "dx":
             sublist = self.sensors[4:8]
-
-        value = sum(s.getValue() for s in sublist)
-        print("balance walls:", value)
+            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
         return value
 
     # def get_number_wall_sensors_left(self):
@@ -221,6 +222,26 @@ class Body:
             if sensor.getValue() > MAX_SENSOR_VALUE:
                 value += 1
         return value
+
+    def get_wall_proximity(self, side):
+        sublist = []
+        value = 0
+        if side == 'sx':
+            sublist = self.sensors[0:4]
+            value = sum(s.getValue() > MIN_SENSOR_VALUE_TO_TURN for s in sublist)
+            print(value, " valori > di ", MIN_SENSOR_VALUE_TO_TURN)
+
+        elif side == 'dx':
+            sublist = self.sensors[4:8]
+            value = sum(s.getValue() > MIN_SENSOR_VALUE_TO_TURN for s in sublist)
+            print(value, " valori > di ", MIN_SENSOR_VALUE_TO_TURN)
+        return value
+
+    def wall(self):
+        if any(s.getValue() >= WALL for s in self.sensors):
+            return True
+        else:
+            return False
 
     # def set_position(self, position):
     #     self.left_motor.setPosition(23.0)
