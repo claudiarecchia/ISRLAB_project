@@ -4,7 +4,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.97061437865851 -0.15825644346192638 -0.1812805175525946 4.581580059840988
-  position -1.901773442134565 11.06006270711764 -3.186508504753583
+  position -1.4831200750112712 12.117889073218706 -2.776925905790793
 }
 TexturedBackground {
 }
@@ -54,6 +54,70 @@ Solid {
   ]
 }
 Solid {
+  translation -0.308295 -0.246278 -0.819217
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 1 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "yellow box(1)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 1 0
+  ]
+}
+Solid {
+  translation -2.29037 -0.246278 -0.0242148
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 1 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "yellow box(2)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 1 0
+  ]
+}
+Solid {
   translation 0.160836 -0.246278 -0.0364636
   rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
   children [
@@ -63,20 +127,57 @@ Solid {
           emissiveColor 0 0 1
         }
       }
-      geometry Box {
-        size 0.1 0.1 0.1
+      geometry Sphere {
+        radius 0.06
       }
     }
   ]
   name "blue box"
-  boundingObject Box {
-    size 0.1 0.1 0.1
+  boundingObject Sphere {
+    radius 0.06
   }
   physics Physics {
-    mass 0.055
+    mass 0.1
     centerOfMass [
       0 0 0
     ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    0 0 1
+  ]
+}
+Solid {
+  translation -0.587775 -0.246278 -1.62512
+  rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 0 0 1
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "blue box(1)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
   }
   recognitionColors [
     0 0 1
@@ -149,6 +250,70 @@ Solid {
     }
   ]
   name "red box"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 0 0
+  ]
+}
+Solid {
+  translation -0.714262 -0.2 -2.29029
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 0 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "red box(2)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 0 0
+  ]
+}
+Solid {
+  translation -1.14463 -0.2 -0.833056
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 0 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "red box(1)"
   boundingObject Sphere {
     radius 0.06
   }

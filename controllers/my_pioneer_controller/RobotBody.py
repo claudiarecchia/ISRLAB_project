@@ -185,7 +185,8 @@ class Body:
             sublist = self.sensors[4:8]
             value = sum(MAX_SENSOR_VALUE < s.getValue() < MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
         else:
-            sublist = self.sensors
+            sublist = self.sensors[0:4]
+            # sublist = self.sensors
             value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
 
         return value
@@ -200,18 +201,6 @@ class Body:
             sublist = self.sensors[4:8]
             value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
         return value
-
-    # def get_number_wall_sensors_left(self):
-    #     value = 0
-    #     if self.sensors[0].getValue() > MAX_SENSOR_VALUE:
-    #         value += 1
-    #     if self.sensors[1].getValue() > MAX_SENSOR_VALUE:
-    #         value += 1
-    #     if self.sensors[2].getValue() > MAX_SENSOR_VALUE:
-    #         value += 1
-    #     if self.sensors[3].getValue() > MAX_SENSOR_VALUE:
-    #         value += 1
-    #     return value
 
     def get_number_wall_sensors_right(self):
         sublist = self.sensors[4:8]
@@ -229,6 +218,9 @@ class Body:
         if side == 'sx':
             sublist = self.sensors[0:4]
             value = sum(s.getValue() > MIN_SENSOR_VALUE_TO_TURN for s in sublist)
+            for s in sublist:
+                if s.getValue() > MIN_SENSOR_VALUE_TO_TURN:
+                    print(s, s.getValue())
             print(value, " valori > di ", MIN_SENSOR_VALUE_TO_TURN)
 
         elif side == 'dx':
@@ -237,8 +229,12 @@ class Body:
             print(value, " valori > di ", MIN_SENSOR_VALUE_TO_TURN)
         return value
 
-    def wall(self):
-        if any(s.getValue() >= WALL for s in self.sensors):
+    def wall(self, side):
+        if side == "front":
+            sublist = self.sensors[0:8]
+        elif side == "back":
+            sublist = self.sensors[8:]
+        if any(s.getValue() >= WALL for s in sublist):
             return True
         else:
             return False
