@@ -10,12 +10,13 @@
 
 from controllers.my_pioneer_controller.RobotBody import Body
 import time
+import redis
+import json
 
 MAX_SPEED = 6.28
 TIME_STEP = 64
 
 turn_left = False
-# before_action_gps = []
 straight = False
 box_placed = False
 turned = False
@@ -24,8 +25,8 @@ ACTION = ""
 NEXT_ACTION = ""
 
 yellow_corner = [-2.9, -0.2, -3.3]
-red_corner = [1.19, -0.2, -3.3]
-green_corner = [-3.15, -0.2, 0.86]
+red_corner = [1.49, -0.2, -3.3]  # 1.19 x
+green_corner = [-3.15, -0.2, 0.66]  #0.86 z
 blue_corner = [1.19, -0.2, 0.86]
 
 yellow_yaw = 0.4
@@ -40,7 +41,28 @@ def current_milli_time():
 
 class Brain:
 
-    def __init__(self):
+    def __init__(self, channel_in_spheres, channel_out_spheres, channel_in_current_sphere, channel_out_current_sphere):
+        self._myR = redis.Redis(decode_responses=True)
+        print(self._myR.info())
+
+        # sfere totali
+        self._ch_in_spheres = channel_in_spheres
+        self._ch_out_spheres = channel_out_spheres
+
+        # sfera attuale e colore
+        self._ch_in_current_sphere = channel_in_current_sphere
+        self._ch_out_current_sphere = channel_out_current_sphere
+
+        #pubsub to in channels
+        self._pubsub_spheres = self._myR.pubsub()
+        self._pubsub_spheres.subscribe(self._ch_in_spheres)
+
+        self._pubsub_current_sphere = self._myR.pubsub()
+        self._pubsub_current_sphere.subscribe(self._ch_in_current_sphere)
+
+        self.placed_spheres = []
+        self.current_sphere_slave = []
+
         self.robot = Body()
         self.target_object = None
         self.ACTION = ""
@@ -79,6 +101,7 @@ class Brain:
         self.stop_time = None
         self.first_save_stop_time = True
         self.stopped = False
+        self.modified_angle = 0
 
     def get_robot(self):
         return self.robot.get_robot()
@@ -100,9 +123,9 @@ class Brain:
         else: return False
 
     def check_wall_reached(self):
+        print("check wall reached; num sensors: ", self.robot.get_number_wall_sensors())
 
         if self.robot.get_number_wall_sensors() >= 2 or self.check_wall_behind_if_back() or self.robot.wall('front'):
-
             print(self.robot.get_number_wall_sensors())
 
             if not self.stopped:
@@ -136,10 +159,13 @@ class Brain:
             # quindi devo andare più a destra
             if self.left_sequence and self.first_saving_angle:
                 if self.robot.get_yaw() > 0 and self.angle > 0 or self.robot.get_yaw() < 0 and self.angle < 0:
-                    if abs(self.backup_angle - self.angle) >= 0.6:
-                        self.angle = self.angle - 0.2
-                    else:
-                        self.angle = self.angle - 0.3
+                    if self.modified_angle <= 4:  # modifico l'angolo non più di 4 volte
+                        if abs(self.backup_angle - self.angle) >= 0.6:
+                            self.angle = self.angle - 0.1
+                            self.modified_angle = self.modified_angle + 1
+                        else:
+                            self.angle = self.angle - 0.3
+                            self.modified_angle = self.modified_angle + 1
                     print("modificato:", self.angle)
                     self.first_saving_yaw = True
                     self.first_saving_gps = True
@@ -150,10 +176,11 @@ class Brain:
 
             if self.right_sequence and self.first_saving_angle:
                 if self.robot.get_yaw() > 0 and self.angle > 0 or self.robot.get_yaw() < 0 and self.angle < 0:
-                    if abs(self.backup_angle - self.angle) >= 0.6:
-                        self.angle = self.angle + 0.2
-                    else:
-                        self.angle = self.angle + 0.3
+                    if self.modified_angle <= 4:  # modifico l'angolo non più di 4 volte
+                            if abs(self.backup_angle - self.angle) >= 0.6:
+                                self.angle = self.angle + 0.1
+                            else:
+                                self.angle = self.angle + 0.3
                     print("modificato:", self.angle)
                     self.first_saving_yaw = True
                     self.first_saving_gps = True
@@ -334,6 +361,7 @@ class Brain:
                 if el.get_id() not in self.boxes_ids:
                     print("id: ", el.get_id())
                     self.target_object = el
+                    self.modified_angle = 0  # inizializzo il numero di volte in cui si è modificato l'angolo del nuovo oggetto
 
                     if el.get_colors() == [1.0, 1.0, 0.0]:  # giallo
                         self.destination = yellow_corner
@@ -609,8 +637,60 @@ class Brain:
 
     # Enter here exit cleanup code.
 
+    def read_placed_spheres(self):
+        now = time.time()
+        timeout = now + 0.1
+        while now < timeout:
+            message = self._pubsub_spheres.get_message(ignore_subscribe_messages=True)
+            if message is not None:
+        # for msg in self._pubsub_spheres.listen():
+        #     print("ciao")
+        #     print(msg['type'])
+        #     if msg['type'] == 'message':
+                print("PRINT PLACED SPHERES:")
+                print(message)
+                data = message['data']
+                # if data != [""] * 3:
+                data = json.loads(data)
+                if data != self.boxes_ids:
+                    self.boxes_ids = data
+            else:
+                break
+
+    def read_current_sphere_slave(self):
+        now = time.time()
+        timeout = now + 0.1
+        while now < timeout:
+            message = self._pubsub_current_sphere.get_message(ignore_subscribe_messages=True)
+            if message is not None:
+        # for msg in self._pubsub_current_sphere.listen():
+        #     if msg['type'] == 'message':
+                print("PRINT CURRENT SLAVE SPHERE:")
+                print(message)
+                data = message['data']
+                # if data != [""] * 3:
+                data = json.loads(data)
+                self.current_sphere_slave = data
+            else:
+                break
+
+    def write_placed_spheres(self):
+        self._myR.publish(self._ch_out_spheres, json.dumps(self.placed_spheres))
+
+    def write_current_sphere(self):
+        self._myR.publish(self._ch_out_current_sphere, json.dumps([self.target_object.get_id(), self.target_object.get_colors()]))
+
 
 if __name__ == "__main__":
-    brain = Brain()
+    brain = Brain("CH_placed_spheres_S2M", "CH_placed_spheres_M2S", "CH_current_sphere_S2M", "CH_current_sphere_M2S")
     while brain.get_robot().step(TIME_STEP) != -1:
+        # read and store redis data
+        brain.read_placed_spheres()
+        print("1")
+        brain.read_current_sphere_slave()
+        print("2")
+        # then SENSE PLAN ACT
         brain.controller()
+        # then write redis data (if any)
+        brain.write_placed_spheres()
+        brain.write_current_sphere()

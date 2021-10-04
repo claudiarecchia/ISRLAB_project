@@ -235,6 +235,28 @@ Pioneer3dx {
     }
   ]
 }
+Pioneer3dx {
+  translation 0.591237 -0.1925 -2.74171
+  rotation 0 1 0 3.141592653589793
+  name "Pioneer 3-DX(1)"
+  controller "<extern>"
+  extensionSlot [
+    InertialUnit {
+    }
+    DEF GRIPPER_BASE Pioneer3Gripper {
+      translation 0 0.026 -0.135
+    }
+    GPS {
+    }
+    Compass {
+    }
+    Camera {
+      recognition Recognition {
+        occlusion FALSE
+      }
+    }
+  ]
+}
 Solid {
   translation 0.178275 -0.2 -1.39892
   children [

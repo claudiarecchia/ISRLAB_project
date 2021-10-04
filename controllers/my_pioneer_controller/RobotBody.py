@@ -1,4 +1,3 @@
-
 from controller import Robot
 
 MAX_SPEED = 6.28
@@ -8,7 +7,8 @@ gripper_motors = [None, None, None]
 MAX_SENSOR_VALUE = 930
 MAX_SENSOR_VALUE_WALL_REACH = 970
 MIN_SENSOR_VALUE_TO_TURN = 900
-WALL = 1000
+WALL = 1010
+
 
 class Body:
     def __init__(self):
@@ -85,7 +85,6 @@ class Body:
         self.left_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
         self.right_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
 
-
     def get_sensor_value(self, sensor_number):
         return self.sensors[sensor_number].getValue()
 
@@ -115,8 +114,8 @@ class Body:
 
     def go_back(self):
         print("back")
-        self.left_motor.setVelocity(-0.3 * MAX_SPEED)
-        self.right_motor.setVelocity(-0.3 * MAX_SPEED)
+        self.left_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
+        self.right_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
 
     def go_right(self):
         print("destra")
@@ -185,7 +184,7 @@ class Body:
             sublist = self.sensors[4:8]
             value = sum(MAX_SENSOR_VALUE < s.getValue() < MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
         else:
-            sublist = self.sensors[0:4]
+            sublist = self.sensors[0:8]
             # sublist = self.sensors
             value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
 
