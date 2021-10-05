@@ -122,7 +122,7 @@ class Body:
         self.left_motor.setVelocity(0.4 * MAX_SPEED)
         self.right_motor.setVelocity(0)
 
-    def stop_sim(self):
+    def stop(self):
         print("stop")
         # print("stop simulazione. Massimo numero di box da riordinare raggiunto")
         self.left_motor.setVelocity(0)

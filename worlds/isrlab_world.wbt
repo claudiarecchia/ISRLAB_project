@@ -3,8 +3,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.97061437865851 -0.15825644346192638 -0.1812805175525946 4.581580059840988
-  position -1.4831200750112712 12.117889073218706 -2.776925905790793
+  orientation 0.9999901208892013 0.0030257653015077395 -0.003256204591396558 4.773824667298451
+  position -0.25713733467382993 13.065544717608795 -0.2083814431604546
 }
 TexturedBackground {
 }
@@ -238,8 +238,11 @@ Pioneer3dx {
 Pioneer3dx {
   translation 0.591237 -0.1925 -2.74171
   rotation 0 1 0 3.141592653589793
-  name "Pioneer 3-DX(1)"
+  name "Pioneer 3-DX slave"
   controller "<extern>"
+  controllerArgs [
+    ""
+  ]
   extensionSlot [
     InertialUnit {
     }
