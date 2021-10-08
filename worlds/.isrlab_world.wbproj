@@ -8,5 +8,5 @@ centralWidgetVisible: 1
 orthographicViewHeight: 1
 textFiles: 5 "../../../Applications/Webots.app/projects/default/controllers/braitenberg/braitenberg.c" "../nao_project/pioneer_controller.py" "../nao_project/controllers/my_nao_controller/my_nao_controller.py" "../../../Applications/Webots.app/projects/robots/adept/pioneer3/controllers/pioneer3dx_collision_avoidance/pioneer3dx_collision_avoidance.c" "../../../Applications/Webots.app/projects/robots/irobot/create/controllers/create_avoid_obstacles/create_avoid_obstacles.c" "controllers/my_pioneer_controller/my_pioneer_controller.py"
 consoles: Console:All:All
-renderingDevicePerspectives: Pioneer 3-DX slave:camera;1;2.4375;0;0.209827
-renderingDevicePerspectives: Pioneer 3-DX:camera;1;2.4375;0;0
+renderingDevicePerspectives: Pioneer 3-DX slave:camera;1;2.4375;0;0
+renderingDevicePerspectives: Pioneer 3-DX:camera;1;2.4375;0;0.209827

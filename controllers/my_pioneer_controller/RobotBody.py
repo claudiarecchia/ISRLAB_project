@@ -6,8 +6,9 @@ DEFAULT_LIMIT_SPEED = 0.4
 gripper_motors = [None, None, None]
 MAX_SENSOR_VALUE = 930
 MAX_SENSOR_VALUE_WALL_REACH = 970
-MIN_SENSOR_VALUE_TO_TURN = 900
-WALL = 1010
+MIN_SENSOR_VALUE = 900
+WALL = 1000
+
 
 
 class Body:
@@ -179,15 +180,13 @@ class Body:
         value = 0
         if side == "sx":
             sublist = self.sensors[0:4]
-            value = sum(MAX_SENSOR_VALUE < s.getValue() < MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
+            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
         elif side == "dx":
             sublist = self.sensors[4:8]
-            value = sum(MAX_SENSOR_VALUE < s.getValue() < MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
+            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
         else:
             sublist = self.sensors[0:8]
-            # sublist = self.sensors
-            value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in sublist)
-
+            value = sum(s.getValue() > MAX_SENSOR_VALUE for s in sublist)
         return value
 
     def balance_wall(self, side=None):
@@ -216,16 +215,16 @@ class Body:
         value = 0
         if side == 'sx':
             sublist = self.sensors[0:4]
-            value = sum(s.getValue() > MIN_SENSOR_VALUE_TO_TURN for s in sublist)
+            value = sum(s.getValue() > MIN_SENSOR_VALUE for s in sublist)
             for s in sublist:
-                if s.getValue() > MIN_SENSOR_VALUE_TO_TURN:
+                if s.getValue() > MIN_SENSOR_VALUE:
                     print(s, s.getValue())
-            print(value, " valori > di ", MIN_SENSOR_VALUE_TO_TURN)
+            print(value, " valori > di ", MIN_SENSOR_VALUE)
 
         elif side == 'dx':
             sublist = self.sensors[4:8]
-            value = sum(s.getValue() > MIN_SENSOR_VALUE_TO_TURN for s in sublist)
-            print(value, " valori > di ", MIN_SENSOR_VALUE_TO_TURN)
+            value = sum(s.getValue() > MIN_SENSOR_VALUE for s in sublist)
+            print(value, " valori > di ", MIN_SENSOR_VALUE)
         return value
 
     def wall(self, side):
@@ -238,11 +237,27 @@ class Body:
         else:
             return False
 
-    # def set_position(self, position):
-    #     self.left_motor.setPosition(23.0)
-    #     self.right_motor.setPosition(27.0)
-    #     self.left_motor.setVelocity(0.4 * MAX_SPEED)
-    #     self.right_motor.setVelocity(0.4 * MAX_SPEED)
+    def close_to_other_robot(self):
+        sublist = self.sensors[0:8]
+        if any(s.getValue() >= MIN_SENSOR_VALUE for s in sublist):
+            return True
+        else:
+            return False
 
-    # def get_fingers_position(self):
-    #     return [gripper_motors[1].getPosition(), gripper_motors[2].getPosition()]
+    def check_near_wall_front(self, mode):
+        sublist = self.sensors[0:8]
+        return_value = None
+        count = 0
+        if mode == "any":
+            if any(s.getValue() >= MAX_SENSOR_VALUE_WALL_REACH for s in sublist):
+                return_value = True
+            else:
+                return_value = False
+        elif mode == "num":
+            count = sum(s.getValue() >= 930 for s in sublist)
+            return_value = count
+
+            print("count:", count)
+
+        return return_value
+
