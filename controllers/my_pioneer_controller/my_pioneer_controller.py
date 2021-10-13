@@ -624,13 +624,9 @@ if __name__ == "__main__":
     brain_master = Brain("CH_placed_spheres_S2M", "CH_placed_spheres_M2S", "CH_current_sphere_S2M", "CH_current_sphere_M2S", "CH_current_coord_S2M", "CH_current_coord_M2S")
 
     while brain_master.get_robot().step(TIME_STEP) != -1:
-        # read and store redis data
         brain_master.read_placed_spheres()
         brain_master.read_current_sphere_other_robot()
         brain_master.read_current_gps_other_robot()
-        # then SENSE PLAN ACT
         brain_master.controller()
-        # then write redis data (if any)
-        # brain.write_placed_spheres()
         brain_master.write_current_sphere()
         brain_master.write_current_gps()
