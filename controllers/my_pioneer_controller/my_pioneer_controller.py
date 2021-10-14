@@ -27,7 +27,7 @@ NEXT_ACTION = ""
 yellow_corner = [-2.9, -0.2, -3.2]  # -3.3 z (anche red)
 red_corner = [0.9, -0.2, -3.3]  # 1.19 x
 green_corner = [-2.9, -0.2, 0.7]  #0.86 z
-blue_corner = [0.9, -0.2, 0.7]
+blue_corner = [1.1, -0.2, 0.7]
 
 yellow_yaw = 0.4
 red_yaw = -0.5
@@ -138,8 +138,20 @@ class Brain:
             return True
         else: return False
 
+    def reaching_sphere(self):
+        if not self.grabbed_sphere and self.target_object is not None:
+            return True
+        else: return False
+
     def reach_angle(self):
         print("reach angle")
+
+        if self.robot.too_close_wall():
+            print("front wall")
+            self.stopped = False
+            self.stop_time = current_milli_time()
+            self.near_the_spot = False
+
         if round(self.robot.get_yaw(), 1) > self.angle:
             if (self.robot.get_yaw() > 0 and self.angle > 0) or (self.robot.get_yaw() < 0 and self.angle < 0):
                 print("due_due")
@@ -150,7 +162,6 @@ class Brain:
             elif self.robot.get_yaw() > 0 and self.angle < 0 and self.robot.get_gps_values()[2] < 0:
                 print("tre_")
                 self.ACTION = "go right"
-
         elif round(self.robot.get_yaw(), 1) < self.angle:
             if (self.robot.get_yaw() > 0 and self.angle > 0) or (self.robot.get_yaw() < 0 and self.angle < 0):
                 print("due_uno")
@@ -175,14 +186,6 @@ class Brain:
                 or (self.grabbed_sphere and self.robot.check_near_wall_front("any")):
             print(self.robot.get_number_wall_sensors())
 
-            self.wall_reached = True
-
-            if not self.stopped:
-                print("mi fermo")
-                self.ACTION = "stop"
-                self.stopped = True
-                self.stop_time = current_milli_time()
-
             print("WALL REACHED_")
             if not self.reaching_destination:
                 self.wall_reached_gps = self.robot.get_gps_values()
@@ -195,6 +198,13 @@ class Brain:
                         if not self.stopped:
                             print("devo lasciare il box")
                             self.leave_box()
+
+            if not self.stopped:
+                self.wall_reached = True
+                print("mi fermo")
+                self.ACTION = "stop"
+                self.stopped = True
+                self.stop_time = current_milli_time()
 
             return self.wall_reached
         else:
@@ -305,12 +315,12 @@ class Brain:
             or round(self.robot.get_gps_values()[0], 0) - round(self.destination[0], 0) == 0 and \
                 round(self.robot.get_gps_values()[2], 1) - round(self.destination[2], 1) == 0:
             if self.robot.check_near_wall_front("num") >= 2:  # se almeno due sensori superano un determinato valore
-                print("near the spot")
-                self.near_the_spot = True
+                if abs(self.robot.get_gps_values()[0] - self.destination[0]) <= 0.3:  # verifico ulteriormente la vicinanza all'angolo
+                    print("near the spot")
+                    self.near_the_spot = True
         return self.near_the_spot
 
     def leave_box(self):
-        self.write_placed_spheres(self.target_object.get_id())
         self.wall_reached_gps = self.robot.get_gps_values()  # sovrascrivo l'informazione con i dati in cui poggio il box
         print("-- arrivato")
         self.ACTION = "stop"
@@ -325,19 +335,22 @@ class Brain:
         for obj in objects:
             if obj.get_id() == self.target_object.get_id():
                 self.boxes_ids.append(obj.get_id())
+                self.write_placed_spheres(obj.get_id())
 
         if len(self.boxes_ids) == self.total_boxes or self.check_if_last_box_other_robot():
             print("raggiunto")
             self.ACTION = "go back"
             self.last_box = True
             self.check_for_box = False
+            self.target_object = None
 
         elif len(self.boxes_ids) < self.total_boxes:
+            self.target_object = None
             self.check_for_box = True
             # devo prima andare indietro e poi girare a sinistra
             # indica che non ho ancora girato
             self.turned = False
-            self.target_object = None
+
             self.before_action_gps = self.robot.get_gps_values()
 
             if self.left or self.right:
@@ -466,7 +479,6 @@ class Brain:
 
                         if self.first_saving is not None and current_milli_time() - self.saved_millis >= 1 * 1000:
                             self.ACTION = "stop"
-                            self.PREVIOUS_ACTION = "stop"
                             self.grabbed_sphere = True
                             self.orientation_set = False
                             print("Box AFFERRATO")
@@ -522,7 +534,8 @@ class Brain:
 
         if self.last_box: self.back_after_last_box()
 
-        self.check_wall_reached()
+        if not self.reaching_sphere():
+            self.check_wall_reached()
 
         if self.stop_time is not None:
             if self.ACTION == "stop" and self.stopped and not self.last_box and not self.near_the_spot:

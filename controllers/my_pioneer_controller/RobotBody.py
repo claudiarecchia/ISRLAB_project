@@ -159,22 +159,6 @@ class Body:
         gripper_motors[1].setPosition(position)
         gripper_motors[2].setPosition(position)
 
-    # def get_number_wall_sensors(self, side=None):
-    #     value = 0
-    #     if side == "sx":
-    #         for i in range(0, 3+1):
-    #             if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
-    #                 print(self.sensors[i].getValue())
-    #                 value += 1
-    #     if side == "dx":
-    #         for i in range(4, 7+1):
-    #             if self.sensors[i].getValue() > MAX_SENSOR_VALUE:
-    #                 value += 1
-    #     else:
-    #         value = sum(s.getValue() > MAX_SENSOR_VALUE_WALL_REACH for s in self.sensors)
-    #     print(value)
-    #     return value
-
     def get_number_wall_sensors(self, side=None):
         sublist = []
         value = 0
@@ -258,6 +242,11 @@ class Body:
             return_value = count
 
             print("count:", count)
-
         return return_value
 
+    def too_close_wall(self):
+        sublist = self.sensors[0:8]
+        if sum(s.getValue() >= 985 for s in sublist) >= 2:
+            return True
+        else:
+            return False

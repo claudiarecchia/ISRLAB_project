@@ -21,7 +21,7 @@ RectangleArena {
   wallHeight 0.5
 }
 Solid {
-  translation -2.59652 -0.246278 -2.19418
+  translation -1.12188 -0.246278 -1.65711
   rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
   children [
     Shape {
@@ -54,7 +54,7 @@ Solid {
   ]
 }
 Solid {
-  translation -0.356901 -0.246278 -1.99745
+  translation -1.30546 -0.246278 -2.34349
   children [
     Shape {
       appearance Appearance {
@@ -86,7 +86,7 @@ Solid {
   ]
 }
 Solid {
-  translation -2.29037 -0.246278 -0.0242148
+  translation 0.410647 -0.246278 -0.279777
   children [
     Shape {
       appearance Appearance {
@@ -118,7 +118,7 @@ Solid {
   ]
 }
 Solid {
-  translation -1.26331 -0.246278 -0.519575
+  translation -1.6343 -0.246278 -2.07844
   rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
   children [
     Shape {
@@ -151,7 +151,7 @@ Solid {
   ]
 }
 Solid {
-  translation 0.790546 -0.246278 -2.12661
+  translation -1.70777 -0.246278 -0.927525
   rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
   children [
     Shape {
@@ -184,7 +184,7 @@ Solid {
   ]
 }
 Solid {
-  translation 0.353298 -0.2 -0.177662
+  translation -0.544994 -0.2 -0.121108
   children [
     Shape {
       appearance Appearance {
@@ -261,7 +261,7 @@ Pioneer3dx {
   ]
 }
 Solid {
-  translation 0.178275 -0.2 -1.39892
+  translation -1.23935 -0.2 0.239245
   children [
     Shape {
       appearance Appearance {
@@ -325,7 +325,7 @@ Solid {
   ]
 }
 Solid {
-  translation -2.13264 -0.2 -1.15572
+  translation -2.5761 -0.2 -1.81395
   children [
     Shape {
       appearance Appearance {
