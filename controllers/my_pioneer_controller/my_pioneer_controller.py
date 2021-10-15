@@ -83,13 +83,13 @@ class Brain:
         self.target_object = None
         self.ACTION = ""
         self.NEXT_ACTION = ""
-        self.PREVIOUS_ACTION = ""
+
         self.wall_reached = False
         self.check_for_box = False
         self.grabbed_sphere = False
         self.box_placed = False
         self.boxes_ids = []
-        self.total_boxes = 9
+        self.total_boxes = 5
         self.before_action_gps = []
         self.turned = False
         self.wall_reached_gps = []
@@ -124,6 +124,8 @@ class Brain:
         self.turn_time = None
         self.near_the_spot = False
         self.touching_other_robot = False
+        self.last_color_placed = None
+        self.last_box_other_robot = False
 
     def get_robot(self):
         return self.robot.get_robot()
@@ -186,6 +188,13 @@ class Brain:
                 or (self.grabbed_sphere and self.robot.check_near_wall_front("any")):
             print(self.robot.get_number_wall_sensors())
 
+            if not self.stopped:
+                self.wall_reached = True
+                print("mi fermo")
+                self.ACTION = "stop"
+                self.stopped = True
+                self.stop_time = current_milli_time()
+
             print("WALL REACHED_")
             if not self.reaching_destination:
                 self.wall_reached_gps = self.robot.get_gps_values()
@@ -199,12 +208,7 @@ class Brain:
                             print("devo lasciare il box")
                             self.leave_box()
 
-            if not self.stopped:
-                self.wall_reached = True
-                print("mi fermo")
-                self.ACTION = "stop"
-                self.stopped = True
-                self.stop_time = current_milli_time()
+
 
             return self.wall_reached
         else:
@@ -297,12 +301,19 @@ class Brain:
                 self.ACTION = "go left"
 
     def back_after_last_box(self):
-        # dopo 2 secondi in cui stavo andando indietro, termino l'esecuzione
-        if current_milli_time() - self.time_left_box >= 3 * 1000:
+        # vado indietro di un po' e poi termino l'esecuzione
+        if abs(self.wall_reached_gps[0] - self.robot.get_gps_values()[0]) > 0.3 or \
+                abs(self.wall_reached_gps[2] - self.robot.get_gps_values()[2]) > 0.3:
             if len(self.boxes_ids) == self.total_boxes:
-                exit()
+                # exit()
+                print("ultima sfera. mi fermo")
+                self.ACTION = "stop"
+                # self.terminate_execution()
             else:
                 self.ACTION = "stop"
+
+    def terminate_execution(self):
+        exit()
 
     def check_for_other_box(self):
         global before_action_gps, box_placed, turned
@@ -330,17 +341,20 @@ class Brain:
         self.box_placed = True
         self.grabbed_sphere = False
         self.first_saving = True
-        objects = self.robot.get_camera_objects()
         self.time_left_box = current_milli_time()
+        objects = self.robot.get_camera_objects()
+
         for obj in objects:
             if obj.get_id() == self.target_object.get_id():
                 self.boxes_ids.append(obj.get_id())
+                self.last_color_placed = obj.get_colors()
                 self.write_placed_spheres(obj.get_id())
 
         if len(self.boxes_ids) == self.total_boxes or self.check_if_last_box_other_robot():
             print("raggiunto")
-            self.ACTION = "go back"
-            self.last_box = True
+            if self.last_box_other_robot: self.last_box = False
+            elif not self.last_box_other_robot: self.last_box = True
+            # self.last_box = True
             self.check_for_box = False
             self.target_object = None
 
@@ -366,11 +380,13 @@ class Brain:
                 self.orientation_reached = False
                 self.reaching_destination = False
 
-
     def check_if_last_box_other_robot(self):
         if len(self.boxes_ids) == self.total_boxes - 1 and self.current_sphere_other_robot[0] not in self.boxes_ids:
-            return True
-        else: return False
+            self.last_box_other_robot = True
+            self.destination = [-1.1, 0.0, -1.1]  # imposto luogo destinazione da raggiungere (centro della stanza)
+        else:
+            self.last_box_other_robot = False
+        return self.last_box_other_robot
 
     def not_same_color_other_robot_unless_last_sphere(self, el):
         # controllo che il colore della sfera visualizzata sia diverso dal colore della sfera che sta posizionando l'altro robot
@@ -386,6 +402,37 @@ class Brain:
             print("due")
             response = True
         return response
+
+    def stop_or_move_robot(self):
+        print("stop or move robot")
+        if self.last_color_placed != self.current_sphere_other_robot[1]:  # se i colori sono diversi, posso rimanere nella posizione in cui mi trovo
+            self.back_after_last_box()
+        else:  # se invece i colori sono uguali mi devo spostare per far passare l'altro robot
+            # vado verso il centro
+            if 0 < round(self.robot.get_yaw(), 1) < 1.6:
+                angle = blue_yaw
+            elif 1.6 < round(self.robot.get_yaw(), 1) < 3.1:
+                angle = red_yaw
+            elif -3.1 < round(self.robot.get_yaw(), 1) < -1.6:
+                angle = yellow_yaw
+            elif -1.6 < round(self.robot.get_yaw(), 1) < 0:
+                angle = green_yaw
+
+            if round(self.robot.get_yaw(), 1) != angle:
+                print("giro per mettermi in direzione del centro")
+                self.ACTION = "go right"
+            else:  # ho girato abbastanza
+                self.ACTION = "go straight"
+                print("vado dritto")
+                # quando mi avvicino al centro mi fermo
+                self.check_if_place_reached()
+                if self.near_the_spot:
+                    print("arrivato al centro")
+                    self.ACTION = "stop"
+
+    def placed_all_spheres(self):
+        if self.last_box or self.last_box_other_robot: return True
+        else: return False
 
     # Main loop:
     # - perform simulation steps until Webots is stopping the controller
@@ -408,7 +455,7 @@ class Brain:
         print("Sensore 15:", self.robot.get_sensor_value(15))
         print("Rolle - Yaw - Pitch: ", self.robot.get_yaw())
 
-        if self.target_object is None and self.robot.get_camera_number_objects() >= 1:
+        if self.target_object is None and self.robot.get_camera_number_objects() >= 1 and not self.placed_all_spheres():
             # verifico che il target obj non sia già presente nella lista degli oggetti correttamente posizionati
             print("boxes ids: ")
             for element in self.boxes_ids:
@@ -425,11 +472,14 @@ class Brain:
                             self.target_object = el
                             self.modified_angle = 0  # inizializzo il numero di volte in cui si è modificato l'angolo del nuovo oggetto
                             self.near_the_spot = False  # inizializzazione variabile "vicinanza all'angolo"
+                            self.time_left_box = None
+
                     else:
                         print("id: ", el.get_id())
                         self.target_object = el
                         self.modified_angle = 0  # inizializzo il numero di volte in cui si è modificato l'angolo del nuovo oggetto
                         self.near_the_spot = False  # inizializzazione variabile "vicinanza all'angolo"
+                        self.time_left_box = None
 
                     if el.get_colors() == yellow:  # giallo
                         self.destination = yellow_corner
@@ -451,6 +501,12 @@ class Brain:
                         self.backup_angle = blue_yaw
                         self.angle = blue_yaw
                         self.color = blue
+
+                if len(self.boxes_ids) == self.total_boxes - 1 and el.get_id() not in self.boxes_ids and el.get_colors() == self.current_sphere_other_robot[1]:
+                    self.ACTION = "go back"
+                    self.last_box_other_robot = True
+                    self.check_for_box = False
+                    self.destination = [-1.1, 0.0, -1.1]
 
         if self.target_object is not None and not self.wall_reached and self.robot.get_camera_number_objects() > 0:
             self.ACTION, self.NEXT_ACTION = "", ""
@@ -527,17 +583,22 @@ class Brain:
             self.box_placed = False
             print("check for box")
 
-        if self.check_if_last_box_other_robot():
-            self.ACTION = "go back"
-            self.last_box = True
-            self.check_for_box = False
+        # if self.check_if_last_box_other_robot():
+        #     print("last box other robot")
+        #     print("stop time:", self.stop_time)
+        #     # self.ACTION = "go back"
+        #     self.last_box_other_robot = True
+        #     self.check_for_box = False
+        #     self.destination = [-1.1, 0.0, -1.1]
 
-        if self.last_box: self.back_after_last_box()
+        # if self.last_box_other_robot: self.stop_or_move_robot()
+        # if self.last_box: self.back_after_last_box()
 
-        if not self.reaching_sphere():
+        if not self.reaching_sphere() and not self.last_box:
             self.check_wall_reached()
 
         if self.stop_time is not None:
+            print("stop time not none")
             if self.ACTION == "stop" and self.stopped and not self.last_box and not self.near_the_spot:
                 if not self.touching_other_robot:
                     if current_milli_time() - self.stop_time >= 1000:
@@ -548,6 +609,28 @@ class Brain:
                     if current_milli_time() - self.stop_time >= 500:
                         print("vado indietro")
                         self.ACTION = "go back"
+            if self.ACTION == "stop" and self.last_box:
+                print("a")
+                if current_milli_time() - self.stop_time >= 1000:
+                    print("vado indietro")
+                    self.ACTION = "go back"
+                    self.stop_time = None
+                    # self.back_after_last_box()
+            if self.ACTION == "stop" and self.last_box_other_robot:
+                print("b")
+                if current_milli_time() - self.stop_time >= 1000:
+                    print("vado indietro")
+                    self.ACTION = "go back"
+                    self.stop_time = None
+                    # self.stop_or_move_robot()
+
+        if self.ACTION == "go back" and self.last_box:
+            print("BACK")
+            self.back_after_last_box()
+        if self.ACTION == "go back" and self.last_box_other_robot:
+            print("STOP OR MOVE")
+            self.stop_or_move_robot()
+
         print("near:", self.near_the_spot)
         if self.wall_reached and self.grabbed_sphere and not self.check_if_place_reached(): self.turn_to_destination()
         if self.wall_reached and self.target_object is not None and not self.grabbed_sphere: self.turn_to_target()
