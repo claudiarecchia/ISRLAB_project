@@ -1,14 +1,7 @@
 from controller import Robot
+from controllers.my_pioneer_controller.global_variables import *
 
-MAX_SPEED = 6.28
-GRIPPER_MOTOR_MAX_SPEED = 0.1
-DEFAULT_LIMIT_SPEED = 0.4
 gripper_motors = [None, None, None]
-MAX_SENSOR_VALUE = 930
-MAX_SENSOR_VALUE_WALL_REACH = 970
-MIN_SENSOR_VALUE = 900
-WALL = 1000
-
 
 
 class Body:
@@ -21,15 +14,12 @@ class Body:
         self.gps_sensor = self.robot.getDevice('gps')
         self.gps_sensor.enable(self.TIME_STEP)
 
-        # self.gps_sensor = self.gps_sensor_enable()
-
         self.left_motor = self.robot.getDevice('left wheel')
         self.right_motor = self.robot.getDevice('right wheel')
         self.camera = self.robot.getDevice('camera')
         self.camera.enable(self.TIME_STEP)
         self.camera.recognitionEnable(self.TIME_STEP)
-        self.compass = self.robot.getDevice('compass')
-        self.compass.enable(self.TIME_STEP)
+
         self.left_wheel_sensor = self.robot.getDevice('left wheel sensor')
         self.right_wheel_sensor = self.robot.getDevice('right wheel sensor')
 
@@ -42,7 +32,6 @@ class Body:
         self.d5 = self.robot.getDevice('so5')
         self.d6 = self.robot.getDevice('so6')
         self.d7 = self.robot.getDevice('so7')
-
         self.d8 = self.robot.getDevice('so8')
         self.d9 = self.robot.getDevice('so9')
         self.d10 = self.robot.getDevice('so10')
@@ -52,26 +41,11 @@ class Body:
         self.d14 = self.robot.getDevice('so14')
         self.d15 = self.robot.getDevice('so15')
 
-        self.d0.enable(self.TIME_STEP)
-        self.d1.enable(self.TIME_STEP)
-        self.d2.enable(self.TIME_STEP)
-        self.d3.enable(self.TIME_STEP)
-        self.d4.enable(self.TIME_STEP)
-        self.d5.enable(self.TIME_STEP)
-        self.d6.enable(self.TIME_STEP)
-        self.d7.enable(self.TIME_STEP)
-
-        self.d8.enable(self.TIME_STEP)
-        self.d9.enable(self.TIME_STEP)
-        self.d10.enable(self.TIME_STEP)
-        self.d11.enable(self.TIME_STEP)
-        self.d12.enable(self.TIME_STEP)
-        self.d13.enable(self.TIME_STEP)
-        self.d14.enable(self.TIME_STEP)
-        self.d15.enable(self.TIME_STEP)
-
         self.sensors = [self.d0, self.d1, self.d2, self.d3, self.d4, self.d5, self.d6, self.d7,
                         self.d8, self.d9, self.d10, self.d11, self.d12, self.d13, self.d14, self.d15]
+
+        for s in self.sensors:
+            s.enable(self.TIME_STEP)
 
         gripper_motors[0] = self.robot.getDevice('lift motor')
         gripper_motors[1] = self.robot.getDevice('left finger motor')
@@ -90,9 +64,6 @@ class Body:
 
     def get_gps_values(self):
         return self.gps_sensor.getValues()
-
-    def get_compass_values(self):
-        return self.compass.getValues()
 
     def get_yaw(self):
         return self.inertial_unit.getRollPitchYaw()[2]
@@ -126,7 +97,6 @@ class Body:
         print("stop")
         self.left_motor.setVelocity(0)
         self.right_motor.setVelocity(0)
-
 
     def get_camera_number_objects(self):
         return self.camera.getRecognitionNumberOfObjects()
