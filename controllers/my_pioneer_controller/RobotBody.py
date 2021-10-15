@@ -76,7 +76,6 @@ class Body:
         gripper_motors[0] = self.robot.getDevice('lift motor')
         gripper_motors[1] = self.robot.getDevice('left finger motor')
         gripper_motors[2] = self.robot.getDevice('right finger motor')
-        # gripper_motor_sensor = self.robot.getDevice('right finger sensor')
 
         self.move_fingers(0.1)
         self.lift(0.05)
@@ -125,10 +124,9 @@ class Body:
 
     def stop(self):
         print("stop")
-        # print("stop simulazione. Massimo numero di box da riordinare raggiunto")
         self.left_motor.setVelocity(0)
         self.right_motor.setVelocity(0)
-        # exit()
+
 
     def get_camera_number_objects(self):
         return self.camera.getRecognitionNumberOfObjects()
@@ -139,13 +137,6 @@ class Body:
     def get_timestep(self):
         return self.TIME_STEP
 
-    # def gps_sensor_enable(self):
-    #     gps_sensor = robot.getDevice('gps')
-    #     gps_sensor.enable(64)
-    #     print(gps_sensor)
-    #     print(gps_sensor.getValues())
-    #     return gps_sensor
-    #
     def get_robot(self):
         return self.robot
 
@@ -159,94 +150,8 @@ class Body:
         gripper_motors[1].setPosition(position)
         gripper_motors[2].setPosition(position)
 
-    def get_number_wall_sensors(self, side=None):
-        sublist = []
-        value = 0
-        if side == "sx":
-            sublist = self.sensors[0:4]
-            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
-        elif side == "dx":
-            sublist = self.sensors[4:8]
-            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
-        else:
-            sublist = self.sensors[0:8]
-            value = sum(s.getValue() > MAX_SENSOR_VALUE for s in sublist)
-        return value
-
-    def balance_wall(self, side=None):
-        sublist = []
-        value = 0
-        if side == "sx":
-            sublist = self.sensors[0:4]
-            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
-        elif side == "dx":
-            sublist = self.sensors[4:8]
-            value = sum(MAX_SENSOR_VALUE < s.getValue() for s in sublist)
-        return value
-
-    def get_number_wall_sensors_right(self):
-        sublist = self.sensors[4:8]
-        value = 0
-        sum = 0
-        for sensor in sublist:
-            sum += sensor.getValue()
-            if sensor.getValue() > MAX_SENSOR_VALUE:
-                value += 1
-        return value
-
-    def get_wall_proximity(self, side):
-        sublist = []
-        value = 0
-        if side == 'sx':
-            sublist = self.sensors[0:4]
-            value = sum(s.getValue() > MIN_SENSOR_VALUE for s in sublist)
-            for s in sublist:
-                if s.getValue() > MIN_SENSOR_VALUE:
-                    print(s, s.getValue())
-            print(value, " valori > di ", MIN_SENSOR_VALUE)
-
-        elif side == 'dx':
-            sublist = self.sensors[4:8]
-            value = sum(s.getValue() > MIN_SENSOR_VALUE for s in sublist)
-            print(value, " valori > di ", MIN_SENSOR_VALUE)
-        return value
-
-    def wall(self, side):
-        if side == "front":
-            sublist = self.sensors[0:8]
-        elif side == "back":
-            sublist = self.sensors[8:]
-        if any(s.getValue() >= WALL for s in sublist):
-            return True
-        else:
-            return False
-
-    def close_to_other_robot(self):
-        sublist = self.sensors[0:8]
-        if any(s.getValue() >= MIN_SENSOR_VALUE for s in sublist):
-            return True
-        else:
-            return False
-
-    def check_near_wall_front(self, mode):
-        sublist = self.sensors[0:8]
-        return_value = None
-        count = 0
-        if mode == "any":
-            if any(s.getValue() >= MAX_SENSOR_VALUE_WALL_REACH for s in sublist):
-                return_value = True
-            else:
-                return_value = False
-        elif mode == "num":
-            count = sum(s.getValue() >= 930 for s in sublist)
-            return_value = count
-
-            print("count:", count)
-        return return_value
-
-    def too_close_wall(self):
-        sublist = self.sensors[0:8]
-        if sum(s.getValue() >= 985 for s in sublist) >= 2:
-            return True
-        else:
-            return False
+    def get_values_all_sensors(self):
+        values = []
+        for s in self.sensors:
+            values.append(s.getValue())
+        return values
