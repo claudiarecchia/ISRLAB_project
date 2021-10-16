@@ -108,7 +108,7 @@ class Brain:
         if self.too_close_wall():
             print("front wall")
             self.stopped = False
-            self.stop_time = current_milli_time()
+            # self.stop_time = current_milli_time()
             self.near_the_spot = False
 
         if round(self.yaw, 1) > self.angle:
@@ -145,13 +145,6 @@ class Brain:
                 or (self.grabbed_sphere and self.check_near_wall_front("any")):
             print(self.get_number_wall_sensors())
 
-            if not self.stopped:
-                self.wall_reached = True
-                print("mi fermo")
-                self.ACTION = "stop"
-                self.stopped = True
-                self.stop_time = current_milli_time()
-
             print("WALL REACHED_")
             if not self.reaching_destination:
                 self.wall_reached_gps = self.gps
@@ -164,6 +157,13 @@ class Brain:
                         if not self.stopped:
                             print("devo lasciare il box")
                             self.leave_box()
+
+            if not self.stopped:
+                self.wall_reached = True
+                print("mi fermo")
+                self.ACTION = "stop"
+                self.stopped = True
+                self.stop_time = current_milli_time()
 
             return self.wall_reached
         else:
@@ -239,17 +239,19 @@ class Brain:
             # devo riorientare il robot verso l'angolo corretto
             self.wall_reached = False
             return
-
         # se sto cercando un nuovo box, giro finchè non ne trovo uno nella camera
         else:
             # se il valore misurato sui sensori a sinistra è maggiore di quello misurato a destra
             # allora giro a destra
             print("sto cercando un box")
             self.wall_reached = False
-            if self.sensors[0] + self.sensors[1] > self.sensors[6] + self.sensors[7]:
-                self.ACTION = "go right"
-            else:
-                self.ACTION = "go left"
+            self.choose_right_or_left()
+
+    def choose_right_or_left(self):
+        if self.sensors[0] + self.sensors[1] > self.sensors[6] + self.sensors[7]:
+            self.ACTION = "go right"
+        else:
+            self.ACTION = "go left"
 
     def back_after_last_box(self):
         # vado indietro di un po' e poi termino l'esecuzione
@@ -353,6 +355,9 @@ class Brain:
         print("Sensore 14:", self.sensors[14])
         print("Sensore 15:", self.sensors[15])
         print("Angolo di Yaw: ", self.yaw)
+
+        if self.target_object is None and self.number_objects == 0 and len(self.boxes_ids) == 0:
+            self.choose_right_or_left()
 
         if self.target_object is None and self.number_objects >= 1 and not self.placed_all_spheres():
             # verifico che il target obj non sia già presente nella lista degli oggetti correttamente posizionati

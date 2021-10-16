@@ -14,8 +14,8 @@ WALL = 1000
 MAX_SENSOR_VALUE = 930
 MAX_SENSOR_VALUE_WALL_REACH = 970
 
-yellow_corner = [-2.9, -0.2, -3.2]
-red_corner = [0.9, -0.2, -3.3]
+yellow_corner = [-3, -0.2, -3.1]
+red_corner = [1.1, -0.2, -3.1]
 green_corner = [-2.9, -0.2, 0.7]
 blue_corner = [1.1, -0.2, 0.7]
 
@@ -33,4 +33,4 @@ blue = [0.0, 0.0, 1.0]
 ORIENTAMENTI_left = [-0.1, 1.5, -1.7, -3.1]
 ORIENTAMENTI_right = [0.1, 1.7, -1.5, -2.9]
 
-total_boxes = 5
+total_boxes = 4
