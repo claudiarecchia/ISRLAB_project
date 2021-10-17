@@ -76,6 +76,8 @@ class Brain:
         self.touching_other_robot = False
         self.last_color_placed = None
         self.last_box_other_robot = False
+        self.recognized_objects = []
+        self.stopped_in_the_middle = False
 
         # SENSE
         self.gps = None
@@ -269,7 +271,7 @@ class Brain:
             or round(self.gps[0], 0) - round(self.destination[0], 0) == 0 and \
                 round(self.gps[2], 1) - round(self.destination[2], 1) == 0:
             if self.check_near_wall_front("num") >= 2:  # se almeno due sensori superano un determinato valore
-                if abs(self.gps[0] - self.destination[0]) <= 0.3:  # verifico ulteriormente la vicinanza all'angolo
+                if abs(self.gps[0] - self.destination[0]) <= 0.4:  # verifico ulteriormente la vicinanza all'angolo
                     print("near the spot")
                     self.near_the_spot = True
         return self.near_the_spot
@@ -313,7 +315,6 @@ class Brain:
     def check_if_last_box_other_robot(self):
         if len(self.boxes_ids) == total_boxes - 1 and self.current_sphere_other_robot[0] not in self.boxes_ids:
             self.last_box_other_robot = True
-            # self.destination = [-1.1, 0.0, -1.1]  # imposto luogo destinazione da raggiungere (centro della stanza)
         else:
             self.last_box_other_robot = False
         return self.last_box_other_robot
@@ -336,6 +337,15 @@ class Brain:
         if self.last_box or self.last_box_other_robot: return True
         else: return False
 
+    def recognized_all_objects(self):
+        # ritorna un valore positivo se ho visto tutte le sfere o se me ne manca una
+        # e quella che mi manca è quella che ha in mano l'altro robot (che può essere girato dall'altra parte
+        # e quindi fuori dalla mia visuale)
+        response = False
+        if len(self.recognized_objects) == total_boxes: response = True
+        if len(self.recognized_objects) == total_boxes - 1 and self.current_sphere_other_robot[0] not in self.recognized_objects: response = True
+        return response
+
     # Main loop:
     def controller(self):
         print("Sensore 0:", self.sensors[0])
@@ -356,8 +366,35 @@ class Brain:
         print("Sensore 15:", self.sensors[15])
         print("Angolo di Yaw: ", self.yaw)
 
+        # aggiungo le informazioni (id, colore) di tutti gli oggetti che incontro
+        if self.number_objects > 0:
+            for obj in self.objects:
+                if [obj.get_id(), obj.get_colors()] not in self.recognized_objects:
+                    self.recognized_objects.append([obj.get_id(), obj.get_colors()])
+
+        print("oggetti riconosciuti:", self.recognized_objects)
+
         if self.target_object is None and self.number_objects == 0 and len(self.boxes_ids) == 0:
             self.choose_right_or_left()
+
+        if self.target_object is None and self.recognized_all_objects() and len(self.boxes_ids) != total_boxes:
+            # verifico che le palline rimanenti non siano tutte dello stesso colore del target obj dell'altro robot
+            # se sono tutte di quel colore, io mi fermo
+            count = 0
+            objects_to_be_placed = [obj for obj in self.recognized_objects if obj[0] not in self.boxes_ids]
+            number = len(objects_to_be_placed)
+            print("number:", number)
+            for obj in objects_to_be_placed:
+                if obj[1] == self.current_sphere_other_robot[1]:
+                   count += 1
+            print("count:", count)
+            if count == number:
+                # mi devo fermare perchè tutte le sfere che rimangono sono del colore della sfera target dell'altro robot
+                # quindi sarà lui a posizionarla
+                self.last_box = True
+                self.stopped = True
+                self.stop_time = None
+                self.stopped_in_the_middle = True
 
         if self.target_object is None and self.number_objects >= 1 and not self.placed_all_spheres():
             # verifico che il target obj non sia già presente nella lista degli oggetti correttamente posizionati
@@ -474,6 +511,7 @@ class Brain:
                     if current_milli_time() - self.stop_time >= 500:
                         print("vado indietro")
                         self.ACTION = "go back"
+
             if self.ACTION == "stop" and self.last_box:
                 print("a")
                 if current_milli_time() - self.stop_time >= 1000:
@@ -487,6 +525,9 @@ class Brain:
                     print("vado indietro")
                     self.ACTION = "go back"
                     self.stop_time = None
+
+        if self.stop_time is None and self.stopped and self.last_box and self.stopped_in_the_middle:
+            self.ACTION = "stop"
 
         if self.ACTION == "go back" and self.last_box:
             print("BACK")
