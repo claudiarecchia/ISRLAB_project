@@ -136,7 +136,7 @@ Solid {
     Shape {
       appearance Appearance {
         material Material {
-          emissiveColor 1 0 0
+          emissiveColor 0 0 1
         }
       }
       geometry Sphere {
@@ -159,11 +159,11 @@ Solid {
     }
   }
   recognitionColors [
-    1 0 0
+    0 0 1
   ]
 }
 Solid {
-  translation -1.18078 -0.2 -2.29494
+  translation -1.39941 -0.2 -2.16983
   children [
     Shape {
       appearance Appearance {

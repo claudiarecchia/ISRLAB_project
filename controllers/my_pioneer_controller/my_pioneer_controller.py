@@ -377,7 +377,7 @@ class Brain:
         if self.target_object is None and self.number_objects == 0 and len(self.boxes_ids) == 0:
             self.choose_right_or_left()
 
-        if self.target_object is None and self.recognized_all_objects() and len(self.boxes_ids) != total_boxes:
+        if self.target_object is None and self.recognized_all_objects() and len(self.boxes_ids) != total_boxes and not self.check_if_last_box_other_robot() and len(self.recognized_objects) == total_boxes:
             # verifico che le palline rimanenti non siano tutte dello stesso colore del target obj dell'altro robot
             # se sono tutte di quel colore, io mi fermo
             count = 0
