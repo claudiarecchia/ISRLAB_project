@@ -1,3 +1,11 @@
+"""
+    BODY
+    Corpo del robot (non intelligente)
+    Ha il compito di fornire le informazioni che legge dalla simulazione
+    quali i valori dei sensori, informazioni derivate dalla fotocamera ecc.
+    Gestisce le componenti interne del robot, come i moduli montati su di esso
+    mediante l'extension-slot e controlla la velocità delle ruote.
+"""
 from controller import Robot
 from controllers.my_pioneer_controller.global_variables import *
 

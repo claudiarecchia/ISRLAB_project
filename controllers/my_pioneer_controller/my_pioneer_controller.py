@@ -1,10 +1,9 @@
-"""my_pioneer_controller controller."""
-
 """
     BRAIN
     Controllore "intelligente" del robot disaccoppiato dal corpo 
-    Leggere l'array dei sensori
-    Scrivere l'azione definita dall'algoritmo di controllo
+    Legge i sensori
+    Definisce l'azione da intraprendere, mediante l'algoritmo di controllo
+    Effettua l'azione
     Paradigma : SENSE-PLAN-ACT
 """
 from math import sqrt
@@ -14,13 +13,15 @@ import time
 import redis
 import json
 
+
 def current_milli_time():
     return round(time.time() * 1000)
 
 
 class Brain:
 
-    def __init__(self, channel_in_spheres, channel_out_spheres, channel_in_current_sphere, channel_out_current_sphere, ch_in_current_gps, ch_out_current_gps):
+    def __init__(self, channel_in_spheres, channel_out_spheres, channel_in_current_sphere, channel_out_current_sphere,
+                 ch_in_current_gps, ch_out_current_gps):
         self._myR = redis.Redis(decode_responses=True)
         print(self._myR.info())
 
@@ -36,7 +37,7 @@ class Brain:
         self._ch_in_current_gps = ch_in_current_gps
         self._ch_out_current_gps = ch_out_current_gps
 
-        #pubsub to in channels
+        # pubsub to in channels
         self._pubsub_spheres = self._myR.pubsub()
         self._pubsub_spheres.subscribe(self._ch_in_spheres)
 
@@ -92,19 +93,23 @@ class Brain:
         return self.robot.get_robot()
 
     def check_wall_behind_if_back(self):
-        if self.wall('back') and self.ACTION == "go back": return True
-        else: return False
+        if self.wall('back') and self.ACTION == "go back":
+            return True
+        else:
+            return False
 
     def check_collision_other_robot(self):
         if round(self.gps[0], 0) == round(self.current_coordinates_other_robot[0]) and \
                 round(self.gps[2], 0) == round(self.current_coordinates_other_robot[2]):
             return True
-        else: return False
+        else:
+            return False
 
     def reaching_sphere(self):
         if not self.grabbed_sphere and self.target_object is not None:
             return True
-        else: return False
+        else:
+            return False
 
     def reach_angle(self):
         # print("reach angle")
@@ -171,7 +176,8 @@ class Brain:
                 else:
                     self.orientation_reached = True
                     self.ACTION = "go straight"
-            elif self.get_number_wall_sensors('dx') > self.get_number_wall_sensors('sx') and not self.orientation_reached:
+            elif self.get_number_wall_sensors('dx') > self.get_number_wall_sensors(
+                    'sx') and not self.orientation_reached:
                 # finchè non arrivo ad avere un orientamento orizzontale o verticale per raggiungere la destinazione
                 self.right = True
                 if not (ORIENTAMENTI_left[0] < round(self.yaw, 1) < ORIENTAMENTI_right[0] or
@@ -242,7 +248,7 @@ class Brain:
     def check_if_place_reached(self):
         if round(self.gps[0], 1) - round(self.destination[0], 1) == 0 and \
                 round(self.gps[2], 0) - round(self.destination[2], 0) == 0 \
-            or round(self.gps[0], 0) - round(self.destination[0], 0) == 0 and \
+                or round(self.gps[0], 0) - round(self.destination[0], 0) == 0 and \
                 round(self.gps[2], 1) - round(self.destination[2], 1) == 0:
             if self.check_near_wall_front("num") >= 2:  # se almeno due sensori superano un determinato valore
                 if abs(self.gps[0] - self.destination[0]) <= 0.4:  # verifico ulteriormente la vicinanza all'angolo
@@ -266,8 +272,10 @@ class Brain:
                 self.write_placed_spheres(obj.get_id())
 
         if len(self.boxes_ids) == total_boxes or self.check_if_last_box_other_robot():
-            if self.last_box_other_robot: self.last_box = False
-            elif not self.last_box_other_robot: self.last_box = True
+            if self.last_box_other_robot:
+                self.last_box = False
+            elif not self.last_box_other_robot:
+                self.last_box = True
             self.check_for_box = False
             self.target_object = None
 
@@ -298,12 +306,15 @@ class Brain:
         return response
 
     def stop_or_move_robot(self):
-        if self.last_color_placed != self.current_sphere_other_robot[1]:  # se i colori sono diversi, posso rimanere nella posizione in cui mi trovo
+        if self.last_color_placed != self.current_sphere_other_robot[
+            1]:  # se i colori sono diversi, posso rimanere nella posizione in cui mi trovo
             self.back_after_last_box()
 
     def placed_all_spheres(self):
-        if self.last_box or self.last_box_other_robot: return True
-        else: return False
+        if self.last_box or self.last_box_other_robot:
+            return True
+        else:
+            return False
 
     def recognized_all_objects(self):
         # ritorna un valore positivo se ho visto tutte le sfere o se me ne manca una
@@ -311,8 +322,43 @@ class Brain:
         # e quindi fuori dalla mia visuale)
         response = False
         if len(self.recognized_objects) == total_boxes: response = True
-        if len(self.recognized_objects) == total_boxes - 1 and self.current_sphere_other_robot[0] not in self.recognized_objects: response = True
+        if len(self.recognized_objects) == total_boxes - 1 and self.current_sphere_other_robot[
+            0] not in self.recognized_objects: response = True
         return response
+
+    def sort_distances(self, distances):
+        for i in range(0, len(distances) - 1):
+            if distances[i][0] > distances[i + 1][0]:
+                copy = distances[i]
+                distances[i] = distances[i + 1]
+                distances[i + 1] = copy
+
+    def set_element_color(self, el):
+        if el.get_colors() == yellow:  # giallo
+            self.destination = yellow_corner
+            self.angle = yellow_yaw
+            self.color = yellow
+        elif el.get_colors() == red:  # rosso
+            self.destination = red_corner
+            self.angle = red_yaw
+            self.color = red
+        elif el.get_colors() == green:  # verde
+            self.destination = green_corner
+            self.angle = green_yaw
+            self.color = green
+        elif el.get_colors() == blue:  # blu
+            self.destination = blue_corner
+            self.angle = blue_yaw
+            self.color = blue
+
+    def turn_to_target(self):
+        if abs(self.wall_reached_gps[0] - self.gps[0]) > 0.3 or \
+                abs(self.wall_reached_gps[2] - self.gps[2]) > 0.3:
+            self.stopped = False
+            if self.sensors[7] < 900:
+                self.ACTION = "turn right"
+            else:
+                self.ACTION = "turn left"
 
     def controller(self):
         # informazioni (id, colore) di tutti gli oggetti che incontro
@@ -324,7 +370,9 @@ class Brain:
         if self.target_object is None and self.number_objects == 0 and len(self.boxes_ids) == 0:
             self.choose_right_or_left()
 
-        if self.target_object is None and self.recognized_all_objects() and len(self.boxes_ids) != total_boxes and not self.check_if_last_box_other_robot() and len(self.recognized_objects) == total_boxes:
+        if self.target_object is None and self.recognized_all_objects() and len(
+                self.boxes_ids) != total_boxes and not self.check_if_last_box_other_robot() and len(
+                self.recognized_objects) == total_boxes:
             # verifico che le palline rimanenti non siano tutte dello stesso colore del target obj dell'altro robot
             # se sono tutte di quel colore, io mi fermo
             count = 0
@@ -332,7 +380,7 @@ class Brain:
             number = len(objects_to_be_placed)
             for obj in objects_to_be_placed:
                 if obj[1] == self.current_sphere_other_robot[1]:
-                   count += 1
+                    count += 1
             if count == number:
                 # mi devo fermare perchè tutte le sfere che rimangono sono del colore della sfera target dell'altro robot
                 # quindi sarà lui a posizionarla
@@ -349,8 +397,8 @@ class Brain:
                 if el.get_id() not in self.boxes_ids and el.get_id() != self.current_sphere_other_robot[0] and \
                         self.not_same_color_other_robot(el):
                     if "slave" in self.robot.get_robot().getName():
-                        if self.current_sphere_other_robot[0] is not None or (len(self.boxes_ids) == total_boxes - 1\
-                                and el.get_colors() == self.last_color_placed):
+                        if self.current_sphere_other_robot[0] is not None or (len(self.boxes_ids) == total_boxes - 1 \
+                                                                              and el.get_colors() == self.last_color_placed):
                             self.near_the_spot = False  # inizializzazione variabile "vicinanza all'angolo"
                             self.nearest_objects_to_place.append(el)
 
@@ -358,7 +406,9 @@ class Brain:
                         self.near_the_spot = False  # inizializzazione variabile "vicinanza all'angolo"
                         self.nearest_objects_to_place.append(el)
 
-                    if len(self.boxes_ids) == total_boxes - 1 and el.get_id() not in self.boxes_ids and el.get_colors() == self.current_sphere_other_robot[1]:
+                    if len(
+                            self.boxes_ids) == total_boxes - 1 and el.get_id() not in self.boxes_ids and el.get_colors() == \
+                            self.current_sphere_other_robot[1]:
                         # devo rimanere dove mi trovo
                         self.last_box_other_robot = True
                         self.check_for_box = False
@@ -368,7 +418,7 @@ class Brain:
             for obj in self.nearest_objects_to_place:
                 distances.append(
                     [abs((obj.get_position()[0]) + (obj.get_position()[2])),
-                      obj, obj.get_colors()])
+                     obj, obj.get_colors()])
 
             self.sort_distances(distances)
             if distances:
@@ -468,40 +518,6 @@ class Brain:
         if self.wall_reached and self.grabbed_sphere and not self.check_if_place_reached(): self.turn_to_destination()
         if self.wall_reached and self.target_object is not None and not self.grabbed_sphere: self.turn_to_target()
         if self.wall_reached and not self.grabbed_sphere and not self.last_box: self.turn_after_wall_reached()
-
-    def sort_distances(self, distances):
-        for i in range(0, len(distances) - 1):
-            if distances[i][0] > distances[i + 1][0]:
-                copy = distances[i]
-                distances[i] = distances[i + 1]
-                distances[i + 1] = copy
-
-    def set_element_color(self, el):
-        if el.get_colors() == yellow:  # giallo
-            self.destination = yellow_corner
-            self.angle = yellow_yaw
-            self.color = yellow
-        elif el.get_colors() == red:  # rosso
-            self.destination = red_corner
-            self.angle = red_yaw
-            self.color = red
-        elif el.get_colors() == green:  # verde
-            self.destination = green_corner
-            self.angle = green_yaw
-            self.color = green
-        elif el.get_colors() == blue:  # blu
-            self.destination = blue_corner
-            self.angle = blue_yaw
-            self.color = blue
-
-    def turn_to_target(self):
-        if abs(self.wall_reached_gps[0] - self.gps[0]) > 0.3 or \
-                abs(self.wall_reached_gps[2] - self.gps[2]) > 0.3:
-            self.stopped = False
-            if self.sensors[7] < 900:
-                self.ACTION = "turn right"
-            else:
-                self.ACTION = "turn left"
 
     def read_placed_spheres(self):
         now = time.time()
@@ -619,5 +635,3 @@ class Brain:
         if self.ACTION == "go right": self.robot.go_right()
         if self.ACTION == "stop": self.robot.stop()
         if self.ACTION == "slow down": self.robot.slow_down()
-
-
