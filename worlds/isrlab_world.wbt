@@ -21,7 +21,7 @@ RectangleArena {
   wallHeight 0.5
 }
 Solid {
-  translation -2.42469 -0.246278 -1.2354
+  translation -2.71135 -0.246278 -1.35946
   rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
   children [
     Shape {
@@ -54,7 +54,40 @@ Solid {
   ]
 }
 Solid {
-  translation 0.334324 -0.2 -0.301161
+  translation 0.270034 -0.246278 -0.436995
+  rotation -3.502721011029242e-06 0.999999999567797 2.9191384891951883e-05 0
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 1 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "yellow box(1)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 1 0
+  ]
+}
+Solid {
+  translation 0.182278 -0.2 0.0853769
   children [
     Shape {
       appearance Appearance {
@@ -68,6 +101,38 @@ Solid {
     }
   ]
   name "green box(1)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    0 1 0
+  ]
+}
+Solid {
+  translation -0.594015 -0.2 -0.897948
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 0 1 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "green box(2)"
   boundingObject Sphere {
     radius 0.06
   }
@@ -131,7 +196,7 @@ Pioneer3dx {
   ]
 }
 Solid {
-  translation -0.965509 -0.2 -0.852464
+  translation -1.86169 -0.2 -1.57559
   children [
     Shape {
       appearance Appearance {
@@ -163,7 +228,39 @@ Solid {
   ]
 }
 Solid {
-  translation -1.39941 -0.2 -2.16983
+  translation -2.5311 -0.2 -0.284463
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 0 0 1
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "red box(6)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    0 0 1
+  ]
+}
+Solid {
+  translation -1.76687 -0.2 -2.90181
   children [
     Shape {
       appearance Appearance {
@@ -177,6 +274,38 @@ Solid {
     }
   ]
   name "red box(2)"
+  boundingObject Sphere {
+    radius 0.06
+  }
+  physics Physics {
+    mass 0.1
+    centerOfMass [
+      0 0 0
+    ]
+    damping Damping {
+      linear 0.17
+      angular 0.33
+    }
+  }
+  recognitionColors [
+    1 0 0
+  ]
+}
+Solid {
+  translation -0.112066 -0.2 -1.32902
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          emissiveColor 1 0 0
+        }
+      }
+      geometry Sphere {
+        radius 0.06
+      }
+    }
+  ]
+  name "red box(4)"
   boundingObject Sphere {
     radius 0.06
   }

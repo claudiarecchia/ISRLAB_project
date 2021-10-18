@@ -69,32 +69,32 @@ class Body:
         return self.inertial_unit.getRollPitchYaw()[2]
 
     def go_left(self):
-        print("sinistra")
+        # print("sinistra")
         self.left_motor.setVelocity(0)
         self.right_motor.setVelocity(0.4 * MAX_SPEED)
 
     def go_straight(self):
-        print("avanti")
+        # print("avanti")
         self.left_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
         self.right_motor.setVelocity(DEFAULT_LIMIT_SPEED * MAX_SPEED)
 
     def slow_down(self):
-        print("rallenta")
+        # print("rallenta")
         self.left_motor.setVelocity(0.1 * MAX_SPEED)
         self.right_motor.setVelocity(0.1 * MAX_SPEED)
 
     def go_back(self):
-        print("back")
+        # print("back")
         self.left_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
         self.right_motor.setVelocity(-DEFAULT_LIMIT_SPEED * MAX_SPEED)
 
     def go_right(self):
-        print("destra")
+        # print("destra")
         self.left_motor.setVelocity(0.4 * MAX_SPEED)
         self.right_motor.setVelocity(0)
 
     def stop(self):
-        print("stop")
+        # print("stop")
         self.left_motor.setVelocity(0)
         self.right_motor.setVelocity(0)
 
