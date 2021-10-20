@@ -10,10 +10,13 @@ from controller import Robot
 from controllers.my_pioneer_controller.global_variables import *
 
 gripper_motors = [None, None, None]
+sonars = ["so0", "so1", "so2", "so3", "so4", "so5", "so6", "so7",
+          "so8", "so9", "so10", "so11", "so12", "so13", "so14", "so15"]
 
 
 class Body:
     def __init__(self):
+        self.sensors = []
         self.robot = Robot()  # robot instance.
         self.TIME_STEP = int(self.robot.getBasicTimeStep())
         self.inertial_unit = self.robot.getDevice('inertial unit')
@@ -28,29 +31,9 @@ class Body:
         self.camera.enable(self.TIME_STEP)
         self.camera.recognitionEnable(self.TIME_STEP)
 
-        self.left_wheel_sensor = self.robot.getDevice('left wheel sensor')
-        self.right_wheel_sensor = self.robot.getDevice('right wheel sensor')
-
-        # da sinistra a destra
-        self.d0 = self.robot.getDevice('so0')
-        self.d1 = self.robot.getDevice('so1')
-        self.d2 = self.robot.getDevice('so2')
-        self.d3 = self.robot.getDevice('so3')
-        self.d4 = self.robot.getDevice('so4')
-        self.d5 = self.robot.getDevice('so5')
-        self.d6 = self.robot.getDevice('so6')
-        self.d7 = self.robot.getDevice('so7')
-        self.d8 = self.robot.getDevice('so8')
-        self.d9 = self.robot.getDevice('so9')
-        self.d10 = self.robot.getDevice('so10')
-        self.d11 = self.robot.getDevice('so11')
-        self.d12 = self.robot.getDevice('so12')
-        self.d13 = self.robot.getDevice('so13')
-        self.d14 = self.robot.getDevice('so14')
-        self.d15 = self.robot.getDevice('so15')
-
-        self.sensors = [self.d0, self.d1, self.d2, self.d3, self.d4, self.d5, self.d6, self.d7,
-                        self.d8, self.d9, self.d10, self.d11, self.d12, self.d13, self.d14, self.d15]
+        for sensor in sonars:
+            element = self.robot.getDevice(sensor)
+            self.sensors.append(element)
 
         for s in self.sensors:
             s.enable(self.TIME_STEP)

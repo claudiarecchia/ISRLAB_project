@@ -6,7 +6,7 @@
     Effettua l'azione
     Paradigma : SENSE-PLAN-ACT
 """
-from math import sqrt
+
 from controllers.my_pioneer_controller.RobotBody import Body
 from controllers.my_pioneer_controller.global_variables import *
 import time
